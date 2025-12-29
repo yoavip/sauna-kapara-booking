@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useUserStore } from "@/stores/userStore";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Zap, Users, Clock } from "lucide-react";
+import { ArrowRight, Zap, Users, Clock, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import { format, addDays, isSameDay, startOfDay } from "date-fns";
+import { he } from "date-fns/locale";
 
 interface RegistrationScreenProps {
   onBack: () => void;
@@ -16,24 +18,26 @@ interface HourCount {
 
 const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
   const { name, phone } = useUserStore();
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [hourCounts, setHourCounts] = useState<HourCount[]>([]);
   const [isRegistering, setIsRegistering] = useState<number | null>(null);
   const [myRegistrations, setMyRegistrations] = useState<number[]>([]);
 
+  const isToday = isSameDay(selectedDate, new Date());
   const currentHour = new Date().getHours();
-  const hours = Array.from({ length: 24 - currentHour }, (_, i) => currentHour + i).filter(h => h <= 23);
+  const hours = isToday 
+    ? Array.from({ length: 24 - currentHour }, (_, i) => currentHour + i).filter(h => h <= 23)
+    : Array.from({ length: 24 }, (_, i) => i);
 
   const fetchRegistrations = async () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dayStart = startOfDay(selectedDate);
+    const dayEnd = addDays(dayStart, 1);
 
     const { data, error } = await supabase
       .from('registrations')
       .select('hour, name, phone')
-      .gte('registered_at', today.toISOString())
-      .lt('registered_at', tomorrow.toISOString());
+      .gte('registered_at', dayStart.toISOString())
+      .lt('registered_at', dayEnd.toISOString());
 
     if (error) {
       console.error('Error fetching registrations:', error);
@@ -57,7 +61,9 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
 
   useEffect(() => {
     fetchRegistrations();
+  }, [name, phone, selectedDate]);
 
+  useEffect(() => {
     // Subscribe to realtime updates
     const channel = supabase
       .channel('registrations-changes')
@@ -77,7 +83,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [name, phone]);
+  }, [selectedDate]);
 
   const handleRegister = async (hour: number) => {
     if (myRegistrations.includes(hour)) {
@@ -87,19 +93,25 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
 
     setIsRegistering(hour);
 
+    // Create the registration timestamp for the selected date
+    const registrationDate = startOfDay(selectedDate);
+    registrationDate.setHours(hour);
+
     const { error } = await supabase
       .from('registrations')
       .insert({
         name,
         phone,
         hour,
+        registered_at: registrationDate.toISOString(),
       });
 
     if (error) {
       console.error('Error registering:', error);
       toast.error('שגיאה בהרשמה, נסו שוב');
     } else {
-      toast.success(`נרשמת בהצלחה לשעה ${hour}:00!`);
+      const dateLabel = isToday ? '' : ` ב-${format(selectedDate, 'dd/MM')}`;
+      toast.success(`נרשמת בהצלחה לשעה ${hour}:00${dateLabel}!`);
     }
 
     setIsRegistering(null);
@@ -111,6 +123,24 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
 
   const formatHour = (hour: number) => {
     return `${hour.toString().padStart(2, '0')}:00`;
+  };
+
+  const getDateLabel = (date: Date) => {
+    const today = new Date();
+    if (isSameDay(date, today)) return 'היום';
+    if (isSameDay(date, addDays(today, 1))) return 'מחר';
+    return format(date, 'EEEE, dd/MM', { locale: he });
+  };
+
+  const navigateDate = (direction: 'prev' | 'next') => {
+    if (direction === 'prev') {
+      const prevDate = addDays(selectedDate, -1);
+      if (prevDate >= startOfDay(new Date())) {
+        setSelectedDate(prevDate);
+      }
+    } else {
+      setSelectedDate(addDays(selectedDate, 1));
+    }
   };
 
   return (
@@ -138,28 +168,62 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
           <p className="text-muted-foreground text-sm" dir="ltr">{phone}</p>
         </div>
 
-        {/* Register Now Button */}
-        <Button
-          variant="hero"
-          size="xl"
-          className="w-full mb-8"
-          onClick={handleRegisterNow}
-          disabled={isRegistering === currentHour || myRegistrations.includes(currentHour)}
-        >
-          <Zap className="w-5 h-5 ml-2" />
-          {myRegistrations.includes(currentHour) ? 'כבר רשום לעכשיו' : 'כאן עכשיו!'}
-        </Button>
+        {/* Date Selector */}
+        <div className="bg-card rounded-2xl p-4 mb-6 shadow-warm">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => navigateDate('next')}
+              className="p-2 rounded-full hover:bg-muted transition-colors"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+            
+            <div className="flex items-center gap-2 text-center">
+              <CalendarDays className="w-5 h-5 text-primary" />
+              <span className="text-lg font-bold text-foreground">{getDateLabel(selectedDate)}</span>
+              {!isToday && (
+                <span className="text-sm text-muted-foreground">({format(selectedDate, 'dd/MM')})</span>
+              )}
+            </div>
+            
+            <button
+              onClick={() => navigateDate('prev')}
+              className={`p-2 rounded-full transition-colors ${
+                isSameDay(selectedDate, new Date()) 
+                  ? 'opacity-30 cursor-not-allowed' 
+                  : 'hover:bg-muted'
+              }`}
+              disabled={isSameDay(selectedDate, new Date())}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Register Now Button - only show for today */}
+        {isToday && (
+          <Button
+            variant="hero"
+            size="xl"
+            className="w-full mb-8"
+            onClick={handleRegisterNow}
+            disabled={isRegistering === currentHour || myRegistrations.includes(currentHour)}
+          >
+            <Zap className="w-5 h-5 ml-2" />
+            {myRegistrations.includes(currentHour) ? 'כבר רשום לעכשיו' : 'כאן עכשיו!'}
+          </Button>
+        )}
 
         {/* Hours List */}
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
             <Clock className="w-5 h-5" />
-            שעות היום
+            {isToday ? 'שעות היום' : `שעות ${getDateLabel(selectedDate)}`}
           </h2>
           
           {hourCounts.map(({ hour, count }) => {
             const isMyRegistration = myRegistrations.includes(hour);
-            const isCurrentHour = hour === currentHour;
+            const isCurrentHour = isToday && hour === currentHour;
             
             return (
               <div
