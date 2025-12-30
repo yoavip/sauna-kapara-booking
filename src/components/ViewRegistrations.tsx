@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Users, Clock, User } from "lucide-react";
+import { ArrowRight, Users, Clock, User, CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { format, addDays, isSameDay, startOfDay } from "date-fns";
+import { he } from "date-fns/locale";
+import { useUserStore } from "@/stores/userStore";
+import { toast } from "sonner";
+import { trackPageView, trackCancellation } from "@/lib/analytics";
+import ThermometerBackground from "./ThermometerBackground";
+import ShareButton from "./ShareButton";
 
 interface ViewRegistrationsProps {
   onBack: () => void;
@@ -10,6 +16,7 @@ interface ViewRegistrationsProps {
 interface Registration {
   id: string;
   name: string;
+  phone: string;
   hour: number;
 }
 
@@ -19,22 +26,27 @@ interface HourGroup {
 }
 
 const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
+  const { name, phone } = useUserStore();
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [hourGroups, setHourGroups] = useState<HourGroup[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const isToday = isSameDay(selectedDate, new Date());
   const currentHour = new Date().getHours();
 
+  useEffect(() => {
+    trackPageView('view_registrations', name, phone);
+  }, []);
+
   const fetchRegistrations = async () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dayStart = startOfDay(selectedDate);
+    const dayEnd = addDays(dayStart, 1);
 
     const { data, error } = await supabase
       .from('registrations')
-      .select('id, name, hour')
-      .gte('registered_at', today.toISOString())
-      .lt('registered_at', tomorrow.toISOString())
+      .select('id, name, phone, hour')
+      .gte('registered_at', dayStart.toISOString())
+      .lt('registered_at', dayEnd.toISOString())
       .order('hour', { ascending: true });
 
     if (error) {
@@ -53,8 +65,10 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
       groups[reg.hour].push(reg);
     });
 
-    // Create ordered array from current hour onwards
-    const hours = Array.from({ length: 24 - currentHour }, (_, i) => currentHour + i).filter(h => h <= 23);
+    // Create ordered array
+    const hours = isToday 
+      ? Array.from({ length: 24 - currentHour }, (_, i) => currentHour + i).filter(h => h <= 23)
+      : Array.from({ length: 24 }, (_, i) => i);
     
     const result: HourGroup[] = hours.map(hour => ({
       hour,
@@ -66,8 +80,11 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
   };
 
   useEffect(() => {
+    setLoading(true);
     fetchRegistrations();
+  }, [selectedDate]);
 
+  useEffect(() => {
     // Subscribe to realtime updates
     const channel = supabase
       .channel('view-registrations-changes')
@@ -87,14 +104,49 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [selectedDate]);
+
+  const handleCancelRegistration = async (regId: string, hour: number) => {
+    const { error } = await supabase
+      .from('registrations')
+      .delete()
+      .eq('id', regId);
+
+    if (error) {
+      console.error('Error canceling registration:', error);
+      toast.error('שגיאה בביטול ההרשמה');
+    } else {
+      toast.success('ההרשמה בוטלה');
+      trackCancellation(hour, format(selectedDate, 'yyyy-MM-dd'), name, phone);
+    }
+  };
 
   const formatHour = (hour: number) => {
     return `${hour.toString().padStart(2, '0')}:00`;
   };
 
+  const getDateLabel = (date: Date) => {
+    const today = new Date();
+    if (isSameDay(date, today)) return 'היום';
+    if (isSameDay(date, addDays(today, 1))) return 'מחר';
+    return format(date, 'EEEE, dd/MM', { locale: he });
+  };
+
+  const navigateDate = (direction: 'prev' | 'next') => {
+    if (direction === 'prev') {
+      const prevDate = addDays(selectedDate, -1);
+      if (prevDate >= startOfDay(new Date())) {
+        setSelectedDate(prevDate);
+      }
+    } else {
+      setSelectedDate(addDays(selectedDate, 1));
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <ThermometerBackground />
+      
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -105,12 +157,44 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
             <ArrowRight className="w-5 h-5" />
             חזרה
           </button>
-          <h1 className="text-lg font-bold text-foreground">מי פה היום?</h1>
+          <h1 className="text-lg font-bold text-foreground">מי פה?</h1>
           <div className="w-20" />
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 relative z-10">
+        {/* Date Selector */}
+        <div className="bg-card rounded-2xl p-4 mb-6 shadow-warm">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => navigateDate('next')}
+              className="p-2 rounded-full hover:bg-muted transition-colors"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+            
+            <div className="flex items-center gap-2 text-center">
+              <CalendarDays className="w-5 h-5 text-primary" />
+              <span className="text-lg font-bold text-foreground">{getDateLabel(selectedDate)}</span>
+              {!isToday && (
+                <span className="text-sm text-muted-foreground">({format(selectedDate, 'dd/MM')})</span>
+              )}
+            </div>
+            
+            <button
+              onClick={() => navigateDate('prev')}
+              className={`p-2 rounded-full transition-colors ${
+                isSameDay(selectedDate, new Date()) 
+                  ? 'opacity-30 cursor-not-allowed' 
+                  : 'hover:bg-muted'
+              }`}
+              disabled={isSameDay(selectedDate, new Date())}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
         {loading ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">טוען...</p>
@@ -118,7 +202,7 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
         ) : (
           <div className="space-y-6">
             {hourGroups.map(({ hour, registrations }) => {
-              const isCurrentHour = hour === currentHour;
+              const isCurrentHour = isToday && hour === currentHour;
               
               return (
                 <div
@@ -154,15 +238,34 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
                   {registrations.length > 0 ? (
                     <div className="p-4">
                       <div className="flex flex-wrap gap-2">
-                        {registrations.map((reg) => (
-                          <div
-                            key={reg.id}
-                            className="flex items-center gap-2 bg-background px-4 py-2 rounded-full border border-border"
-                          >
-                            <User className="w-4 h-4 text-primary" />
-                            <span className="font-medium text-foreground">{reg.name}</span>
-                          </div>
-                        ))}
+                        {registrations.map((reg) => {
+                          const isMyRegistration = reg.name === name && reg.phone === phone;
+                          
+                          return (
+                            <div
+                              key={reg.id}
+                              className={`flex items-center gap-2 px-4 py-2 rounded-full border ${
+                                isMyRegistration 
+                                  ? 'bg-primary/10 border-primary' 
+                                  : 'bg-background border-border'
+                              }`}
+                            >
+                              <User className={`w-4 h-4 ${isMyRegistration ? 'text-primary' : 'text-muted-foreground'}`} />
+                              <span className={`font-medium ${isMyRegistration ? 'text-primary' : 'text-foreground'}`}>
+                                {reg.name}
+                              </span>
+                              {isMyRegistration && (
+                                <button
+                                  onClick={() => handleCancelRegistration(reg.id, hour)}
+                                  className="p-1 hover:bg-destructive/20 rounded-full transition-colors mr-1"
+                                  title="ביטול הרשמה"
+                                >
+                                  <X className="w-4 h-4 text-destructive" />
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   ) : (
@@ -176,6 +279,8 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
           </div>
         )}
       </main>
+
+      <ShareButton />
     </div>
   );
 };
