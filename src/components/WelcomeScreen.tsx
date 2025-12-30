@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useUserStore } from "@/stores/userStore";
 import { UserPlus, Users, Flame } from "lucide-react";
 import saunaHero from "@/assets/sauna-hero.jpg";
+import RulesSheet from "./RulesSheet";
 
 interface WelcomeScreenProps {
   onRegister: () => void;
@@ -15,6 +17,7 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations }: WelcomeScreenProps) 
   const [inputName, setInputName] = useState(name);
   const [inputPhone, setInputPhone] = useState(phone);
   const [showInputs, setShowInputs] = useState(!isRegistered());
+  const [agreedToRules, setAgreedToRules] = useState(false);
 
   const handleSaveUser = () => {
     if (inputName.trim() && inputPhone.trim()) {
@@ -85,12 +88,32 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations }: WelcomeScreenProps) 
                   dir="ltr"
                   className="h-14 text-base text-center"
                 />
+                
+                {/* Rules Agreement */}
+                <div className="flex items-center gap-3 py-2">
+                  <Checkbox
+                    id="rules"
+                    checked={agreedToRules}
+                    onCheckedChange={(checked) => setAgreedToRules(checked === true)}
+                  />
+                  <label htmlFor="rules" className="text-sm text-muted-foreground">
+                    קראתי ומסכים/ה ל
+                    <RulesSheet 
+                      trigger={
+                        <button type="button" className="text-primary hover:underline mr-1">
+                          חוקים וכללים
+                        </button>
+                      }
+                    />
+                  </label>
+                </div>
+
                 <Button 
                   onClick={handleSaveUser}
                   variant="warm"
                   size="lg"
                   className="w-full"
-                  disabled={!inputName.trim() || !inputPhone.trim()}
+                  disabled={!inputName.trim() || !inputPhone.trim() || !agreedToRules}
                 >
                   שמור
                 </Button>

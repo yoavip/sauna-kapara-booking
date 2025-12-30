@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useUserStore } from "@/stores/userStore";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Zap, Users, Clock, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, Zap, Users, Clock, CalendarDays, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { format, addDays, isSameDay, startOfDay } from "date-fns";
 import { he } from "date-fns/locale";
+import AddParticipantsSheet from "./AddParticipantsSheet";
 
 interface RegistrationScreenProps {
   onBack: () => void;
@@ -22,6 +23,8 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
   const [hourCounts, setHourCounts] = useState<HourCount[]>([]);
   const [isRegistering, setIsRegistering] = useState<number | null>(null);
   const [myRegistrations, setMyRegistrations] = useState<number[]>([]);
+  const [showAddParticipants, setShowAddParticipants] = useState(false);
+  const [pendingHour, setPendingHour] = useState<number | null>(null);
 
   const isToday = isSameDay(selectedDate, new Date());
   const currentHour = new Date().getHours();
@@ -85,8 +88,8 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
     };
   }, [selectedDate]);
 
-  const handleRegister = async (hour: number) => {
-    if (myRegistrations.includes(hour)) {
+  const handleRegister = async (hour: number, additionalNames: string[] = []) => {
+    if (myRegistrations.includes(hour) && additionalNames.length === 0) {
       toast.error('כבר נרשמת לשעה זו');
       return;
     }
@@ -97,24 +100,59 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
     const registrationDate = startOfDay(selectedDate);
     registrationDate.setHours(hour);
 
-    const { error } = await supabase
-      .from('registrations')
-      .insert({
+    // Register the main user if not already registered
+    const registrations = [];
+    
+    if (!myRegistrations.includes(hour)) {
+      registrations.push({
         name,
         phone,
         hour,
         registered_at: registrationDate.toISOString(),
       });
+    }
+
+    // Add additional participants
+    additionalNames.forEach(participantName => {
+      registrations.push({
+        name: participantName,
+        phone: phone, // Use the main user's phone
+        hour,
+        registered_at: registrationDate.toISOString(),
+      });
+    });
+
+    if (registrations.length === 0) {
+      setIsRegistering(null);
+      return;
+    }
+
+    const { error } = await supabase
+      .from('registrations')
+      .insert(registrations);
 
     if (error) {
       console.error('Error registering:', error);
       toast.error('שגיאה בהרשמה, נסו שוב');
     } else {
       const dateLabel = isToday ? '' : ` ב-${format(selectedDate, 'dd/MM')}`;
-      toast.success(`נרשמת בהצלחה לשעה ${hour}:00${dateLabel}!`);
+      const count = registrations.length;
+      toast.success(`${count > 1 ? `${count} אנשים נרשמו` : 'נרשמת'} בהצלחה לשעה ${hour}:00${dateLabel}!`);
     }
 
     setIsRegistering(null);
+  };
+
+  const handleAddParticipantsConfirm = (names: string[]) => {
+    if (pendingHour !== null) {
+      handleRegister(pendingHour, names);
+      setPendingHour(null);
+    }
+  };
+
+  const openAddParticipants = (hour: number) => {
+    setPendingHour(hour);
+    setShowAddParticipants(true);
   };
 
   const handleRegisterNow = () => {
@@ -247,11 +285,19 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
                   )}
                 </div>
                 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <Users className="w-4 h-4" />
                     <span className="font-medium">{count}</span>
                   </div>
+                  
+                  <button
+                    onClick={() => openAddParticipants(hour)}
+                    className="p-2 rounded-full border border-border hover:border-primary hover:text-primary transition-colors"
+                    title="הוסף משתתפים"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
                   
                   <Button
                     variant={isMyRegistration ? "outline" : "default"}
@@ -267,6 +313,12 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
           })}
         </div>
       </main>
+
+      <AddParticipantsSheet
+        open={showAddParticipants}
+        onOpenChange={setShowAddParticipants}
+        onConfirm={handleAddParticipantsConfirm}
+      />
     </div>
   );
 };
