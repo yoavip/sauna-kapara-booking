@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -6,6 +6,9 @@ import { useUserStore } from "@/stores/userStore";
 import { UserPlus, Users, Flame } from "lucide-react";
 import saunaHero from "@/assets/sauna-hero.jpg";
 import RulesSheet from "./RulesSheet";
+import ThermometerBackground from "./ThermometerBackground";
+import ShareButton from "./ShareButton";
+import { trackPageView } from "@/lib/analytics";
 
 interface WelcomeScreenProps {
   onRegister: () => void;
@@ -18,6 +21,10 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations }: WelcomeScreenProps) 
   const [inputPhone, setInputPhone] = useState(phone);
   const [showInputs, setShowInputs] = useState(!isRegistered());
   const [agreedToRules, setAgreedToRules] = useState(false);
+
+  useEffect(() => {
+    trackPageView('welcome', name, phone);
+  }, []);
 
   const handleSaveUser = () => {
     if (inputName.trim() && inputPhone.trim()) {
@@ -157,6 +164,7 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations }: WelcomeScreenProps) 
           </div>
         </div>
       </div>
+      <ShareButton />
     </div>
   );
 };

@@ -2,11 +2,14 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useUserStore } from "@/stores/userStore";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Zap, Users, Clock, CalendarDays, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ArrowRight, Zap, Users, Clock, CalendarDays, ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { format, addDays, isSameDay, startOfDay } from "date-fns";
 import { he } from "date-fns/locale";
 import AddParticipantsSheet from "./AddParticipantsSheet";
+import ThermometerBackground from "./ThermometerBackground";
+import ShareButton from "./ShareButton";
+import { trackPageView, trackRegistration, trackCancellation } from "@/lib/analytics";
 
 interface RegistrationScreenProps {
   onBack: () => void;
@@ -17,12 +20,17 @@ interface HourCount {
   count: number;
 }
 
+interface MyRegistration {
+  id: string;
+  hour: number;
+}
+
 const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
   const { name, phone } = useUserStore();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [hourCounts, setHourCounts] = useState<HourCount[]>([]);
   const [isRegistering, setIsRegistering] = useState<number | null>(null);
-  const [myRegistrations, setMyRegistrations] = useState<number[]>([]);
+  const [myRegistrations, setMyRegistrations] = useState<MyRegistration[]>([]);
   const [showAddParticipants, setShowAddParticipants] = useState(false);
   const [pendingHour, setPendingHour] = useState<number | null>(null);
 
@@ -32,13 +40,16 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
     ? Array.from({ length: 24 - currentHour }, (_, i) => currentHour + i).filter(h => h <= 23)
     : Array.from({ length: 24 }, (_, i) => i);
 
+  const isRegisteredForHour = (hour: number) => myRegistrations.some(r => r.hour === hour);
+  const getMyRegistrationId = (hour: number) => myRegistrations.find(r => r.hour === hour)?.id;
+
   const fetchRegistrations = async () => {
     const dayStart = startOfDay(selectedDate);
     const dayEnd = addDays(dayStart, 1);
 
     const { data, error } = await supabase
       .from('registrations')
-      .select('hour, name, phone')
+      .select('id, hour, name, phone')
       .gte('registered_at', dayStart.toISOString())
       .lt('registered_at', dayEnd.toISOString());
 
@@ -49,12 +60,12 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
 
     // Count per hour
     const counts: Record<number, number> = {};
-    const myRegs: number[] = [];
+    const myRegs: MyRegistration[] = [];
     
     data?.forEach(reg => {
       counts[reg.hour] = (counts[reg.hour] || 0) + 1;
       if (reg.name === name && reg.phone === phone) {
-        myRegs.push(reg.hour);
+        myRegs.push({ id: reg.id, hour: reg.hour });
       }
     });
 
@@ -63,8 +74,8 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
   };
 
   useEffect(() => {
-    fetchRegistrations();
-  }, [name, phone, selectedDate]);
+    trackPageView('registration', name, phone);
+  }, []);
 
   useEffect(() => {
     // Subscribe to realtime updates
@@ -89,7 +100,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
   }, [selectedDate]);
 
   const handleRegister = async (hour: number, additionalNames: string[] = []) => {
-    if (myRegistrations.includes(hour) && additionalNames.length === 0) {
+    if (isRegisteredForHour(hour) && additionalNames.length === 0) {
       toast.error('כבר נרשמת לשעה זו');
       return;
     }
@@ -103,7 +114,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
     // Register the main user if not already registered
     const registrations = [];
     
-    if (!myRegistrations.includes(hour)) {
+    if (!isRegisteredForHour(hour)) {
       registrations.push({
         name,
         phone,
@@ -138,9 +149,28 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
       const dateLabel = isToday ? '' : ` ב-${format(selectedDate, 'dd/MM')}`;
       const count = registrations.length;
       toast.success(`${count > 1 ? `${count} אנשים נרשמו` : 'נרשמת'} בהצלחה לשעה ${hour}:00${dateLabel}!`);
+      trackRegistration(hour, format(selectedDate, 'yyyy-MM-dd'), name, phone, additionalNames.length);
     }
 
     setIsRegistering(null);
+  };
+
+  const handleCancelRegistration = async (hour: number) => {
+    const regId = getMyRegistrationId(hour);
+    if (!regId) return;
+
+    const { error } = await supabase
+      .from('registrations')
+      .delete()
+      .eq('id', regId);
+
+    if (error) {
+      console.error('Error canceling registration:', error);
+      toast.error('שגיאה בביטול ההרשמה');
+    } else {
+      toast.success('ההרשמה בוטלה');
+      trackCancellation(hour, format(selectedDate, 'yyyy-MM-dd'), name, phone);
+    }
   };
 
   const handleAddParticipantsConfirm = (names: string[]) => {
@@ -182,7 +212,8 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <ThermometerBackground />
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -198,7 +229,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 relative z-10">
         {/* User Info */}
         <div className="bg-card rounded-2xl p-6 mb-6 shadow-warm">
           <p className="text-muted-foreground text-sm">נרשם בשם:</p>
@@ -245,10 +276,10 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
             size="xl"
             className="w-full mb-8"
             onClick={handleRegisterNow}
-            disabled={isRegistering === currentHour || myRegistrations.includes(currentHour)}
+            disabled={isRegistering === currentHour || isRegisteredForHour(currentHour)}
           >
             <Zap className="w-5 h-5 ml-2" />
-            {myRegistrations.includes(currentHour) ? 'כבר רשום לעכשיו' : 'כאן עכשיו!'}
+            {isRegisteredForHour(currentHour) ? 'כבר רשום לעכשיו' : 'כאן עכשיו!'}
           </Button>
         )}
 
@@ -260,7 +291,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
           </h2>
           
           {hourCounts.map(({ hour, count }) => {
-            const isMyRegistration = myRegistrations.includes(hour);
+            const isMyRegistration = isRegisteredForHour(hour);
             const isCurrentHour = isToday && hour === currentHour;
             
             return (
@@ -299,14 +330,26 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
                     <Plus className="w-4 h-4" />
                   </button>
                   
-                  <Button
-                    variant={isMyRegistration ? "outline" : "default"}
-                    size="sm"
-                    onClick={() => handleRegister(hour)}
-                    disabled={isRegistering === hour || isMyRegistration}
-                  >
-                    {isRegistering === hour ? '...' : isMyRegistration ? 'רשום ✓' : 'הירשם'}
-                  </Button>
+                  {isMyRegistration ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleCancelRegistration(hour)}
+                      className="text-destructive hover:bg-destructive/10"
+                    >
+                      <X className="w-4 h-4 ml-1" />
+                      בטל
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => handleRegister(hour)}
+                      disabled={isRegistering === hour}
+                    >
+                      {isRegistering === hour ? '...' : 'הירשם'}
+                    </Button>
+                  )}
                 </div>
               </div>
             );
@@ -319,6 +362,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
         onOpenChange={setShowAddParticipants}
         onConfirm={handleAddParticipantsConfirm}
       />
+      <ShareButton />
     </div>
   );
 };
