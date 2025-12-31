@@ -7,7 +7,7 @@ import { UserPlus, Users, Flame } from "lucide-react";
 import saunaHero from "@/assets/sauna-hero.jpg";
 
 import ThermometerBackground from "./ThermometerBackground";
-import ShareButton from "./ShareButton";
+
 import { trackPageView } from "@/lib/analytics";
 
 interface WelcomeScreenProps {
@@ -165,7 +165,7 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations }: WelcomeScreenProps) 
           </div>
         </div>
       </div>
-      <ShareButton />
+      
     </div>
   );
 };

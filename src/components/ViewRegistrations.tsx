@@ -7,7 +7,7 @@ import { useUserStore } from "@/stores/userStore";
 import { toast } from "sonner";
 import { trackPageView, trackCancellation } from "@/lib/analytics";
 import ThermometerBackground from "./ThermometerBackground";
-import ShareButton from "./ShareButton";
+
 
 interface ViewRegistrationsProps {
   onBack: () => void;
@@ -294,7 +294,7 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
         )}
       </main>
 
-      <ShareButton />
+      
     </div>
   );
 };
