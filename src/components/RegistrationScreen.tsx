@@ -9,7 +9,7 @@ import { format, addDays, isSameDay, startOfDay } from "date-fns";
 import { he } from "date-fns/locale";
 import AddParticipantsSheet from "./AddParticipantsSheet";
 import ThermometerBackground from "./ThermometerBackground";
-import ShareButton from "./ShareButton";
+
 import { trackPageView, trackRegistration, trackCancellation } from "@/lib/analytics";
 
 interface RegistrationScreenProps {
@@ -393,7 +393,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
         onOpenChange={setShowAddParticipants}
         onConfirm={handleAddParticipantsConfirm}
       />
-      <ShareButton />
+      
     </div>
   );
 };
