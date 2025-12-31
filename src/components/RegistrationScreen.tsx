@@ -40,9 +40,11 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
   const currentHour = new Date().getHours();
   
   const getHours = () => {
-    return isToday 
-      ? Array.from({ length: 24 - currentHour }, (_, i) => currentHour + i).filter(h => h <= 23)
-      : Array.from({ length: 24 }, (_, i) => i);
+    if (isToday) {
+      return Array.from({ length: 24 - currentHour }, (_, i) => currentHour + i).filter(h => h <= 23);
+    }
+    // Future dates: show all hours starting from 0
+    return Array.from({ length: 24 }, (_, i) => i);
   };
 
   const isRegisteredForHour = (hour: number) => myRegistrations.some(r => r.hour === hour);
@@ -304,10 +306,6 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
             const isMyRegistration = isRegisteredForHour(hour);
             const isCurrentHour = isToday && hour === currentHour;
             
-            // Show up to 3 names, with + for more
-            const displayNames = hourNames.slice(0, 3);
-            const moreCount = hourNames.length > 3 ? hourNames.length - 3 : 0;
-            
             return (
               <div
                 key={hour}
@@ -331,15 +329,12 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  {count > 0 && (
+                  {count > 0 ? (
                     <Popover>
                       <PopoverTrigger asChild>
-                        <button className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                        <button className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
                           <Users className="w-4 h-4" />
                           <span className="font-medium">{count}</span>
-                          <span className="text-xs max-w-[100px] truncate">
-                            {displayNames.join(', ')}{moreCount > 0 && ` +${moreCount}`}
-                          </span>
                         </button>
                       </PopoverTrigger>
                       <PopoverContent className="w-48 p-3" side="top">
@@ -351,8 +346,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
                         </div>
                       </PopoverContent>
                     </Popover>
-                  )}
-                  {count === 0 && (
+                  ) : (
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Users className="w-4 h-4" />
                       <span className="font-medium">0</span>
