@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useUserStore } from "@/stores/userStore";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight, Zap, Users, Clock, CalendarDays, ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
@@ -18,6 +19,7 @@ interface RegistrationScreenProps {
 interface HourCount {
   hour: number;
   count: number;
+  names: string[];
 }
 
 interface MyRegistration {
@@ -36,9 +38,12 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
 
   const isToday = isSameDay(selectedDate, new Date());
   const currentHour = new Date().getHours();
-  const hours = isToday 
-    ? Array.from({ length: 24 - currentHour }, (_, i) => currentHour + i).filter(h => h <= 23)
-    : Array.from({ length: 24 }, (_, i) => i);
+  
+  const getHours = () => {
+    return isToday 
+      ? Array.from({ length: 24 - currentHour }, (_, i) => currentHour + i).filter(h => h <= 23)
+      : Array.from({ length: 24 }, (_, i) => i);
+  };
 
   const isRegisteredForHour = (hour: number) => myRegistrations.some(r => r.hour === hour);
   const getMyRegistrationId = (hour: number) => myRegistrations.find(r => r.hour === hour)?.id;
@@ -46,6 +51,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
   const fetchRegistrations = async () => {
     const dayStart = startOfDay(selectedDate);
     const dayEnd = addDays(dayStart, 1);
+    const hours = getHours();
 
     const { data, error } = await supabase
       .from('registrations')
@@ -60,21 +66,25 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
 
     // Count per hour
     const counts: Record<number, number> = {};
+    const names: Record<number, string[]> = {};
     const myRegs: MyRegistration[] = [];
     
     data?.forEach(reg => {
       counts[reg.hour] = (counts[reg.hour] || 0) + 1;
+      if (!names[reg.hour]) names[reg.hour] = [];
+      names[reg.hour].push(reg.name);
       if (reg.name === name && reg.phone === phone) {
         myRegs.push({ id: reg.id, hour: reg.hour });
       }
     });
 
-    setHourCounts(hours.map(h => ({ hour: h, count: counts[h] || 0 })));
+    setHourCounts(hours.map(h => ({ hour: h, count: counts[h] || 0, names: names[h] || [] })));
     setMyRegistrations(myRegs);
   };
 
   useEffect(() => {
     trackPageView('registration', name, phone);
+    fetchRegistrations();
   }, []);
 
   useEffect(() => {
@@ -290,9 +300,13 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
             {isToday ? 'שעות היום' : `שעות ${getDateLabel(selectedDate)}`}
           </h2>
           
-          {hourCounts.map(({ hour, count }) => {
+          {hourCounts.map(({ hour, count, names: hourNames }) => {
             const isMyRegistration = isRegisteredForHour(hour);
             const isCurrentHour = isToday && hour === currentHour;
+            
+            // Show up to 3 names, with + for more
+            const displayNames = hourNames.slice(0, 3);
+            const moreCount = hourNames.length > 3 ? hourNames.length - 3 : 0;
             
             return (
               <div
@@ -317,10 +331,33 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <Users className="w-4 h-4" />
-                    <span className="font-medium">{count}</span>
-                  </div>
+                  {count > 0 && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                          <Users className="w-4 h-4" />
+                          <span className="font-medium">{count}</span>
+                          <span className="text-xs max-w-[100px] truncate">
+                            {displayNames.join(', ')}{moreCount > 0 && ` +${moreCount}`}
+                          </span>
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-48 p-3" side="top">
+                        <div className="space-y-1">
+                          <p className="font-semibold text-sm mb-2">רשומים לשעה {formatHour(hour)}:</p>
+                          {hourNames.map((n, i) => (
+                            <p key={i} className="text-sm text-muted-foreground">{n}</p>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                  {count === 0 && (
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Users className="w-4 h-4" />
+                      <span className="font-medium">0</span>
+                    </div>
+                  )}
                   
                   <button
                     onClick={() => openAddParticipants(hour)}

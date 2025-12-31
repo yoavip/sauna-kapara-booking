@@ -6,7 +6,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Share2, Copy, MessageCircle, Check } from "lucide-react";
+import { Copy, MessageCircle, Check } from "lucide-react";
 import { toast } from "sonner";
 
 const ShareButton = () => {
@@ -54,8 +54,7 @@ const ShareButton = () => {
         onClick={handleNativeShare}
         className="fixed bottom-6 left-6 z-50 flex items-center gap-2 bg-primary text-primary-foreground px-4 py-3 rounded-full shadow-lg hover:bg-primary/90 transition-all hover:scale-105"
       >
-        <Share2 className="w-5 h-5" />
-        <span className="font-medium">שיתוף</span>
+        <span className="font-medium">אני רוצה לשתף...</span>
       </button>
 
       <Sheet open={open} onOpenChange={setOpen}>

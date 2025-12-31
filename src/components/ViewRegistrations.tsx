@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Users, Clock, User, CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { format, addDays, isSameDay, startOfDay } from "date-fns";
+import { ArrowRight, Users, Clock, User, CalendarDays, ChevronLeft, ChevronRight, X, Shield } from "lucide-react";
+import { format, addDays, subDays, isSameDay, startOfDay, isBefore } from "date-fns";
 import { he } from "date-fns/locale";
 import { useUserStore } from "@/stores/userStore";
 import { toast } from "sonner";
@@ -26,13 +26,15 @@ interface HourGroup {
 }
 
 const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
-  const { name, phone } = useUserStore();
+  const { name, phone, isAdmin } = useUserStore();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [hourGroups, setHourGroups] = useState<HourGroup[]>([]);
   const [loading, setLoading] = useState(true);
 
   const isToday = isSameDay(selectedDate, new Date());
   const currentHour = new Date().getHours();
+  const isPastDate = isBefore(startOfDay(selectedDate), startOfDay(new Date()));
+  const admin = isAdmin();
 
   useEffect(() => {
     trackPageView('view_registrations', name, phone);
@@ -55,7 +57,7 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
       return;
     }
 
-    // Group by hour
+    // Group by hour - only include hours with registrations
     const groups: Record<number, Registration[]> = {};
     
     data?.forEach(reg => {
@@ -65,15 +67,14 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
       groups[reg.hour].push(reg);
     });
 
-    // Create ordered array
-    const hours = isToday 
-      ? Array.from({ length: 24 - currentHour }, (_, i) => currentHour + i).filter(h => h <= 23)
-      : Array.from({ length: 24 }, (_, i) => i);
-    
-    const result: HourGroup[] = hours.map(hour => ({
-      hour,
-      registrations: groups[hour] || []
-    }));
+    // Create ordered array - only hours with registrations
+    const result: HourGroup[] = Object.keys(groups)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .map(hour => ({
+        hour,
+        registrations: groups[hour]
+      }));
 
     setHourGroups(result);
     setLoading(false);
@@ -106,7 +107,7 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
     };
   }, [selectedDate]);
 
-  const handleCancelRegistration = async (regId: string, hour: number) => {
+  const handleCancelRegistration = async (regId: string, hour: number, regName: string) => {
     const { error } = await supabase
       .from('registrations')
       .delete()
@@ -116,7 +117,7 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
       console.error('Error canceling registration:', error);
       toast.error('שגיאה בביטול ההרשמה');
     } else {
-      toast.success('ההרשמה בוטלה');
+      toast.success(`ההרשמה של ${regName} בוטלה`);
       trackCancellation(hour, format(selectedDate, 'yyyy-MM-dd'), name, phone);
     }
   };
@@ -129,18 +130,27 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
     const today = new Date();
     if (isSameDay(date, today)) return 'היום';
     if (isSameDay(date, addDays(today, 1))) return 'מחר';
+    if (isSameDay(date, subDays(today, 1))) return 'אתמול';
     return format(date, 'EEEE, dd/MM', { locale: he });
   };
 
   const navigateDate = (direction: 'prev' | 'next') => {
     if (direction === 'prev') {
       const prevDate = addDays(selectedDate, -1);
-      if (prevDate >= startOfDay(new Date())) {
+      // Allow past dates only for admin
+      if (admin || prevDate >= startOfDay(new Date())) {
         setSelectedDate(prevDate);
       }
     } else {
       setSelectedDate(addDays(selectedDate, 1));
     }
+  };
+
+  const canCancelRegistration = (reg: Registration) => {
+    // Admin can delete anyone
+    if (admin) return true;
+    // User can delete their own registrations (same phone = registered by them)
+    return reg.phone === phone;
   };
 
   return (
@@ -157,7 +167,10 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
             <ArrowRight className="w-5 h-5" />
             חזרה
           </button>
-          <h1 className="text-lg font-bold text-foreground">מי פה?</h1>
+          <div className="flex items-center gap-2">
+            {admin && <Shield className="w-5 h-5 text-primary" />}
+            <h1 className="text-lg font-bold text-foreground">מי פה?</h1>
+          </div>
           <div className="w-20" />
         </div>
       </header>
@@ -179,16 +192,17 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
               {!isToday && (
                 <span className="text-sm text-muted-foreground">({format(selectedDate, 'dd/MM')})</span>
               )}
+              {isPastDate && <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">עבר</span>}
             </div>
             
             <button
               onClick={() => navigateDate('prev')}
               className={`p-2 rounded-full transition-colors ${
-                isSameDay(selectedDate, new Date()) 
+                !admin && isSameDay(selectedDate, new Date()) 
                   ? 'opacity-30 cursor-not-allowed' 
                   : 'hover:bg-muted'
               }`}
-              disabled={isSameDay(selectedDate, new Date())}
+              disabled={!admin && isSameDay(selectedDate, new Date())}
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -198,6 +212,11 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
         {loading ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">טוען...</p>
+          </div>
+        ) : hourGroups.length === 0 ? (
+          <div className="text-center py-12 bg-card rounded-2xl">
+            <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+            <p className="text-muted-foreground">אין רשומים {isPastDate ? 'ליום זה' : 'עדיין'}</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -235,44 +254,39 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
                   </div>
                   
                   {/* Registrations */}
-                  {registrations.length > 0 ? (
-                    <div className="p-4">
-                      <div className="flex flex-wrap gap-2">
-                        {registrations.map((reg) => {
-                          const isMyRegistration = reg.name === name && reg.phone === phone;
-                          
-                          return (
-                            <div
-                              key={reg.id}
-                              className={`flex items-center gap-2 px-4 py-2 rounded-full border ${
-                                isMyRegistration 
-                                  ? 'bg-primary/10 border-primary' 
-                                  : 'bg-background border-border'
-                              }`}
-                            >
-                              <User className={`w-4 h-4 ${isMyRegistration ? 'text-primary' : 'text-muted-foreground'}`} />
-                              <span className={`font-medium ${isMyRegistration ? 'text-primary' : 'text-foreground'}`}>
-                                {reg.name}
-                              </span>
-                              {isMyRegistration && (
-                                <button
-                                  onClick={() => handleCancelRegistration(reg.id, hour)}
-                                  className="p-1 hover:bg-destructive/20 rounded-full transition-colors mr-1"
-                                  title="ביטול הרשמה"
-                                >
-                                  <X className="w-4 h-4 text-destructive" />
-                                </button>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+                  <div className="p-4">
+                    <div className="flex flex-wrap gap-2">
+                      {registrations.map((reg) => {
+                        const isMyRegistration = reg.name === name && reg.phone === phone;
+                        const canCancel = canCancelRegistration(reg);
+                        
+                        return (
+                          <div
+                            key={reg.id}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full border ${
+                              isMyRegistration 
+                                ? 'bg-primary/10 border-primary' 
+                                : 'bg-background border-border'
+                            }`}
+                          >
+                            <User className={`w-4 h-4 ${isMyRegistration ? 'text-primary' : 'text-muted-foreground'}`} />
+                            <span className={`font-medium ${isMyRegistration ? 'text-primary' : 'text-foreground'}`}>
+                              {reg.name}
+                            </span>
+                            {canCancel && !isPastDate && (
+                              <button
+                                onClick={() => handleCancelRegistration(reg.id, hour, reg.name)}
+                                className="p-1 hover:bg-destructive/20 rounded-full transition-colors mr-1"
+                                title="ביטול הרשמה"
+                              >
+                                <X className="w-4 h-4 text-destructive" />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
-                  ) : (
-                    <div className="p-4 text-center text-muted-foreground text-sm">
-                      אין רשומים עדיין
-                    </div>
-                  )}
+                  </div>
                 </div>
               );
             })}
