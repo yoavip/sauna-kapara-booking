@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useUserStore } from "@/stores/userStore";
 import { UserPlus, Users, Flame } from "lucide-react";
 import saunaHero from "@/assets/sauna-hero.jpg";
-import RulesSheet from "./RulesSheet";
+
 import ThermometerBackground from "./ThermometerBackground";
 import ShareButton from "./ShareButton";
 import { trackPageView } from "@/lib/analytics";
@@ -105,13 +105,14 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations }: WelcomeScreenProps) 
                   />
                   <label htmlFor="rules" className="text-sm text-muted-foreground">
                     קראתי ומסכים/ה ל
-                    <RulesSheet 
-                      trigger={
-                        <button type="button" className="text-primary hover:underline mr-1">
-                          חוקים וכללים
-                        </button>
-                      }
-                    />
+                    <a 
+                      href="https://docs.google.com/document/d/1GTYyJSkrMjytvsKmBpEkYS8UJDZA0P8E4igQM1KFW1Y/edit?tab=t.0"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline mr-1"
+                    >
+                      חוקים וכללים
+                    </a>
                   </label>
                 </div>
 
