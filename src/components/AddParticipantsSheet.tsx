@@ -15,11 +15,22 @@ interface AddParticipantsSheetProps {
   onConfirm: (names: string[]) => void;
 }
 
+const MAX_PARTICIPANTS = 3;
+
 const AddParticipantsSheet = ({ open, onOpenChange, onConfirm }: AddParticipantsSheetProps) => {
   const [names, setNames] = useState<string[]>(['']);
 
   const addName = () => {
-    setNames([...names, '']);
+    if (names.length < MAX_PARTICIPANTS) {
+      setNames([...names, '']);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      (e.target as HTMLInputElement).blur(); // Close keyboard
+    }
   };
 
   const updateName = (index: number, value: string) => {
@@ -64,6 +75,7 @@ const AddParticipantsSheet = ({ open, onOpenChange, onConfirm }: AddParticipants
               <Input
                 value={name}
                 onChange={(e) => updateName(index, e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder={`שם משתתף ${index + 1}`}
                 className="h-12 text-base"
               />
@@ -78,13 +90,15 @@ const AddParticipantsSheet = ({ open, onOpenChange, onConfirm }: AddParticipants
             </div>
           ))}
 
-          <button
-            onClick={addName}
-            className="w-full py-4 border-2 border-dashed border-border rounded-xl flex items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-            עוד מישהו
-          </button>
+          {names.length < MAX_PARTICIPANTS && (
+            <button
+              onClick={addName}
+              className="w-full py-4 border-2 border-dashed border-border rounded-xl flex items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+            >
+              <Plus className="w-5 h-5" />
+              עוד מישהו ({MAX_PARTICIPANTS - names.length} נותרו)
+            </button>
+          )}
 
           <div className="pt-4">
             <Button
