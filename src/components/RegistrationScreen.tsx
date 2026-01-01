@@ -170,10 +170,65 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
     setIsRegistering(null);
   };
 
-  const handleCancelRegistration = async (hour: number) => {
+  const handleCancelRegistration = async (hour: number, deleteAll: boolean = false) => {
     const regId = getMyRegistrationId(hour);
     if (!regId) return;
 
+    // Check if there are other participants registered by this user for this hour
+    const dayStart = startOfDay(selectedDate);
+    const dayEnd = addDays(dayStart, 1);
+    
+    const { data: otherParticipants } = await supabase
+      .from('registrations')
+      .select('id, name')
+      .eq('phone', phone)
+      .eq('hour', hour)
+      .neq('name', name)
+      .gte('registered_at', dayStart.toISOString())
+      .lt('registered_at', dayEnd.toISOString());
+
+    const hasOtherParticipants = otherParticipants && otherParticipants.length > 0;
+
+    // If there are other participants and we haven't confirmed yet, ask for confirmation
+    if (hasOtherParticipants && !deleteAll) {
+      const confirmed = window.confirm(
+        `הוספת ${otherParticipants.length} משתתפים נוספים לשעה זו:\n${otherParticipants.map(p => p.name).join(', ')}\n\nהאם לבטל גם את ההרשמות שלהם?`
+      );
+      
+      if (confirmed) {
+        // Delete all registrations including other participants
+        const allIds = [regId, ...otherParticipants.map(p => p.id)];
+        const { error } = await supabase
+          .from('registrations')
+          .delete()
+          .in('id', allIds);
+
+        if (error) {
+          console.error('Error canceling registrations:', error);
+          toast.error('שגיאה בביטול ההרשמות');
+        } else {
+          toast.success(`${allIds.length} הרשמות בוטלו`);
+          trackCancellation(hour, format(selectedDate, 'yyyy-MM-dd'), name, phone);
+        }
+      } else {
+        // Only delete the user's own registration
+        const { error } = await supabase
+          .from('registrations')
+          .delete()
+          .eq('id', regId);
+
+        if (error) {
+          console.error('Error canceling registration:', error);
+          toast.error('שגיאה בביטול ההרשמה');
+        } else {
+          toast.success('ההרשמה שלך בוטלה');
+          trackCancellation(hour, format(selectedDate, 'yyyy-MM-dd'), name, phone);
+        }
+      }
+      return;
+    }
+
+    // No other participants, just delete own registration
     const { error } = await supabase
       .from('registrations')
       .delete()
