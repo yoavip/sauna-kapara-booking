@@ -86,8 +86,11 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
 
   useEffect(() => {
     trackPageView('registration', name, phone);
-    fetchRegistrations();
   }, []);
+
+  useEffect(() => {
+    fetchRegistrations();
+  }, [selectedDate]);
 
   useEffect(() => {
     // Subscribe to realtime updates
