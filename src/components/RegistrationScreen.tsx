@@ -1,6 +1,16 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useUserStore } from "@/stores/userStore";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight, Zap, Users, Clock, CalendarDays, ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
@@ -35,6 +45,12 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
   const [myRegistrations, setMyRegistrations] = useState<MyRegistration[]>([]);
   const [showAddParticipants, setShowAddParticipants] = useState(false);
   const [pendingHour, setPendingHour] = useState<number | null>(null);
+  
+  // State for cancel confirmation dialog
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [pendingCancelHour, setPendingCancelHour] = useState<number | null>(null);
+  const [pendingParticipants, setPendingParticipants] = useState<{id: string, name: string}[]>([]);
+  const [pendingRegId, setPendingRegId] = useState<string | null>(null);
 
   const isToday = isSameDay(selectedDate, new Date());
   const currentHour = new Date().getHours();
@@ -189,58 +205,58 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
 
     const hasOtherParticipants = otherParticipants && otherParticipants.length > 0;
 
-    // If there are other participants and we haven't confirmed yet, ask for confirmation
-    if (hasOtherParticipants && !deleteAll) {
-      const confirmed = window.confirm(
-        `הוספת ${otherParticipants.length} משתתפים נוספים לשעה זו:\n${otherParticipants.map(p => p.name).join(', ')}\n\nהאם לבטל גם את ההרשמות שלהם?`
-      );
-      
-      if (confirmed) {
-        // Delete all registrations including other participants
-        const allIds = [regId, ...otherParticipants.map(p => p.id)];
-        const { error } = await supabase
-          .from('registrations')
-          .delete()
-          .in('id', allIds);
-
-        if (error) {
-          console.error('Error canceling registrations:', error);
-          toast.error('שגיאה בביטול ההרשמות');
-        } else {
-          toast.success(`${allIds.length} הרשמות בוטלו`);
-          trackCancellation(hour, format(selectedDate, 'yyyy-MM-dd'), name, phone);
-        }
-      } else {
-        // Only delete the user's own registration
-        const { error } = await supabase
-          .from('registrations')
-          .delete()
-          .eq('id', regId);
-
-        if (error) {
-          console.error('Error canceling registration:', error);
-          toast.error('שגיאה בביטול ההרשמה');
-        } else {
-          toast.success('ההרשמה שלך בוטלה');
-          trackCancellation(hour, format(selectedDate, 'yyyy-MM-dd'), name, phone);
-        }
-      }
+    // If there are other participants, show the custom dialog
+    if (hasOtherParticipants) {
+      setPendingCancelHour(hour);
+      setPendingParticipants(otherParticipants);
+      setPendingRegId(regId);
+      setCancelDialogOpen(true);
       return;
     }
 
     // No other participants, just delete own registration
-    const { error } = await supabase
-      .from('registrations')
-      .delete()
-      .eq('id', regId);
+    await deleteRegistration(regId, hour);
+  };
 
-    if (error) {
-      console.error('Error canceling registration:', error);
-      toast.error('שגיאה בביטול ההרשמה');
+  const deleteRegistration = async (regId: string, hour: number, includeParticipants: boolean = false) => {
+    if (includeParticipants && pendingParticipants.length > 0) {
+      const allIds = [regId, ...pendingParticipants.map(p => p.id)];
+      const { error } = await supabase
+        .from('registrations')
+        .delete()
+        .in('id', allIds);
+
+      if (error) {
+        console.error('Error canceling registrations:', error);
+        toast.error('שגיאה בביטול ההרשמות');
+      } else {
+        toast.success(`${allIds.length} הרשמות בוטלו`);
+        trackCancellation(hour, format(selectedDate, 'yyyy-MM-dd'), name, phone);
+      }
     } else {
-      toast.success('ההרשמה בוטלה');
-      trackCancellation(hour, format(selectedDate, 'yyyy-MM-dd'), name, phone);
+      const { error } = await supabase
+        .from('registrations')
+        .delete()
+        .eq('id', regId);
+
+      if (error) {
+        console.error('Error canceling registration:', error);
+        toast.error('שגיאה בביטול ההרשמה');
+      } else {
+        toast.success('ההרשמה בוטלה');
+        trackCancellation(hour, format(selectedDate, 'yyyy-MM-dd'), name, phone);
+      }
     }
+  };
+
+  const handleCancelDialogConfirm = async (deleteAll: boolean) => {
+    if (pendingRegId && pendingCancelHour !== null) {
+      await deleteRegistration(pendingRegId, pendingCancelHour, deleteAll);
+    }
+    setCancelDialogOpen(false);
+    setPendingCancelHour(null);
+    setPendingParticipants([]);
+    setPendingRegId(null);
   };
 
   const handleAddParticipantsConfirm = (names: string[]) => {
@@ -451,6 +467,29 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
         onOpenChange={setShowAddParticipants}
         onConfirm={handleAddParticipantsConfirm}
       />
+
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ביטול הרשמה</AlertDialogTitle>
+            <AlertDialogDescription className="text-right">
+              הוספת {pendingParticipants.length} משתתפים נוספים לשעה זו:
+              <br />
+              <strong>{pendingParticipants.map(p => p.name).join(', ')}</strong>
+              <br /><br />
+              האם לבטל גם את ההרשמות שלהם?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2 sm:flex-row-reverse">
+            <AlertDialogAction onClick={() => handleCancelDialogConfirm(true)}>
+              כן, בטל את כולם
+            </AlertDialogAction>
+            <AlertDialogCancel onClick={() => handleCancelDialogConfirm(false)}>
+              לא, רק אותי
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       
     </div>
   );

@@ -15,21 +15,17 @@ interface AddParticipantsSheetProps {
   onConfirm: (names: string[]) => void;
 }
 
-const MAX_PARTICIPANTS = 3;
-
 const AddParticipantsSheet = ({ open, onOpenChange, onConfirm }: AddParticipantsSheetProps) => {
   const [names, setNames] = useState<string[]>(['']);
 
   const addName = () => {
-    if (names.length < MAX_PARTICIPANTS) {
-      setNames([...names, '']);
-    }
+    setNames([...names, '']);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      (e.target as HTMLInputElement).blur(); // Close keyboard
+      (e.target as HTMLInputElement).blur();
     }
   };
 
@@ -61,15 +57,15 @@ const AddParticipantsSheet = ({ open, onOpenChange, onConfirm }: AddParticipants
 
   return (
     <Sheet open={open} onOpenChange={handleClose}>
-      <SheetContent side="bottom" className="h-[70vh]">
-        <SheetHeader className="mb-6">
+      <SheetContent side="bottom" className="h-[70vh] flex flex-col">
+        <SheetHeader className="mb-4 flex-shrink-0">
           <SheetTitle className="flex items-center gap-2 text-xl">
             <Users className="w-5 h-5 text-primary" />
             הוספת משתתפים
           </SheetTitle>
         </SheetHeader>
         
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto space-y-4 pb-4">
           {names.map((name, index) => (
             <div key={index} className="flex items-center gap-2">
               <Input
@@ -90,27 +86,25 @@ const AddParticipantsSheet = ({ open, onOpenChange, onConfirm }: AddParticipants
             </div>
           ))}
 
-          {names.length < MAX_PARTICIPANTS && (
-            <button
-              onClick={addName}
-              className="w-full py-4 border-2 border-dashed border-border rounded-xl flex items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
-            >
-              <Plus className="w-5 h-5" />
-              עוד מישהו ({MAX_PARTICIPANTS - names.length} נותרו)
-            </button>
-          )}
+          <button
+            onClick={addName}
+            className="w-full py-4 border-2 border-dashed border-border rounded-xl flex items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            עוד מישהו
+          </button>
+        </div>
 
-          <div className="pt-4">
-            <Button
-              variant="hero"
-              size="xl"
-              className="w-full"
-              onClick={handleConfirm}
-              disabled={!names.some(n => n.trim())}
-            >
-              אישור ({names.filter(n => n.trim()).length} משתתפים)
-            </Button>
-          </div>
+        <div className="flex-shrink-0 pt-4 border-t border-border">
+          <Button
+            variant="hero"
+            size="xl"
+            className="w-full"
+            onClick={handleConfirm}
+            disabled={!names.some(n => n.trim())}
+          >
+            אישור ({names.filter(n => n.trim()).length} משתתפים)
+          </Button>
         </div>
       </SheetContent>
     </Sheet>
