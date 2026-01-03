@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Users, Clock, User, CalendarDays, ChevronLeft, ChevronRight, X, Shield, Phone } from "lucide-react";
+import { ArrowRight, Users, Clock, User, CalendarDays, ChevronLeft, ChevronRight, X, Shield } from "lucide-react";
 import { format, addDays, subDays, isSameDay, startOfDay, isBefore } from "date-fns";
 import { he } from "date-fns/locale";
 import { useUserStore } from "@/stores/userStore";
@@ -270,17 +270,9 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
                             }`}
                           >
                             <User className={`w-4 h-4 ${isMyRegistration ? 'text-primary' : 'text-muted-foreground'}`} />
-                            <div className="flex flex-col items-start">
-                              <span className={`font-medium ${isMyRegistration ? 'text-primary' : 'text-foreground'}`}>
-                                {reg.name}
-                              </span>
-                              {admin && (
-                                <span className="text-xs text-muted-foreground flex items-center gap-1" dir="ltr">
-                                  <Phone className="w-3 h-3" />
-                                  {reg.phone}
-                                </span>
-                              )}
-                            </div>
+                            <span className={`font-medium ${isMyRegistration ? 'text-primary' : 'text-foreground'}`}>
+                              {reg.name}
+                            </span>
                             {canCancel && !isPastDate && (
                               <button
                                 onClick={() => handleCancelRegistration(reg.id, hour, reg.name)}
