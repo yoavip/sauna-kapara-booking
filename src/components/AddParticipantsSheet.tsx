@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, X, Users } from "lucide-react";
+import { Plus, X, Users, Check } from "lucide-react";
 
 interface AddParticipantsSheetProps {
   open: boolean;
@@ -55,14 +55,28 @@ const AddParticipantsSheet = ({ open, onOpenChange, onConfirm }: AddParticipants
     onOpenChange(false);
   };
 
+  const validCount = names.filter(n => n.trim()).length;
+
   return (
     <Sheet open={open} onOpenChange={handleClose}>
       <SheetContent side="bottom" className="h-[70vh] flex flex-col">
         <SheetHeader className="mb-4 flex-shrink-0">
-          <SheetTitle className="flex items-center gap-2 text-xl">
-            <Users className="w-5 h-5 text-primary" />
-            הוספת משתתפים
-          </SheetTitle>
+          <div className="flex items-center justify-between">
+            <SheetTitle className="flex items-center gap-2 text-xl">
+              <Users className="w-5 h-5 text-primary" />
+              הוספת משתתפים
+            </SheetTitle>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleConfirm}
+              disabled={validCount === 0}
+              className="gap-1"
+            >
+              <Check className="w-4 h-4" />
+              זהו
+            </Button>
+          </div>
         </SheetHeader>
         
         <div className="flex-1 overflow-y-auto space-y-4 pb-4">
@@ -93,18 +107,6 @@ const AddParticipantsSheet = ({ open, onOpenChange, onConfirm }: AddParticipants
             <Plus className="w-5 h-5" />
             עוד מישהו
           </button>
-        </div>
-
-        <div className="flex-shrink-0 pt-4 border-t border-border">
-          <Button
-            variant="hero"
-            size="xl"
-            className="w-full"
-            onClick={handleConfirm}
-            disabled={!names.some(n => n.trim())}
-          >
-            אישור ({names.filter(n => n.trim()).length} משתתפים)
-          </Button>
         </div>
       </SheetContent>
     </Sheet>

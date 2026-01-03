@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import RegistrationScreen from "@/components/RegistrationScreen";
 import ViewRegistrations from "@/components/ViewRegistrations";
+import AdminUsersPage from "@/components/AdminUsersPage";
 
-type Screen = 'welcome' | 'register' | 'view';
+type Screen = 'welcome' | 'register' | 'view' | 'admin-users';
 
 const Index = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('welcome');
@@ -38,6 +39,7 @@ const Index = () => {
         <WelcomeScreen 
           onRegister={() => navigateTo('register')}
           onViewRegistrations={() => navigateTo('view')}
+          onAdminUsers={() => navigateTo('admin-users')}
         />
       )}
       {currentScreen === 'register' && (
@@ -47,6 +49,11 @@ const Index = () => {
       )}
       {currentScreen === 'view' && (
         <ViewRegistrations 
+          onBack={navigateBack}
+        />
+      )}
+      {currentScreen === 'admin-users' && (
+        <AdminUsersPage 
           onBack={navigateBack}
         />
       )}

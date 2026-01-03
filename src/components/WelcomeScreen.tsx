@@ -3,43 +3,62 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useUserStore } from "@/stores/userStore";
-import { UserPlus, Users, Flame } from "lucide-react";
+import { UserPlus, Users, Flame, Shield, ScrollText } from "lucide-react";
 import saunaHero from "@/assets/sauna-hero.jpg";
-
 import ThermometerBackground from "./ThermometerBackground";
-
+import RulesSheet from "./RulesSheet";
 import { trackPageView } from "@/lib/analytics";
 
 interface WelcomeScreenProps {
   onRegister: () => void;
   onViewRegistrations: () => void;
+  onAdminUsers: () => void;
 }
 
-const WelcomeScreen = ({ onRegister, onViewRegistrations }: WelcomeScreenProps) => {
-  const { name, phone, setUser, isRegistered } = useUserStore();
+const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: WelcomeScreenProps) => {
+  const { name, lastName, phone, setUser, isRegistered, checkAdminSync, isAdmin } = useUserStore();
   const [inputName, setInputName] = useState(name);
+  const [inputLastName, setInputLastName] = useState(lastName);
   const [inputPhone, setInputPhone] = useState(phone);
   const [showInputs, setShowInputs] = useState(!isRegistered());
   const [agreedToRules, setAgreedToRules] = useState(false);
+  const [rulesOpened, setRulesOpened] = useState(false);
+  const [showRulesSheet, setShowRulesSheet] = useState(false);
+  const [isAdminUser, setIsAdminUser] = useState(checkAdminSync());
 
   useEffect(() => {
     trackPageView('welcome', name, phone);
+    // Check admin status on mount
+    if (isRegistered()) {
+      isAdmin().then(setIsAdminUser);
+    }
   }, []);
 
-  const handleSaveUser = () => {
+  const handleSaveUser = async () => {
     if (inputName.trim() && inputPhone.trim()) {
-      setUser(inputName.trim(), inputPhone.trim());
+      await setUser(inputName.trim(), inputLastName.trim(), inputPhone.trim());
       setShowInputs(false);
+      const adminStatus = await isAdmin();
+      setIsAdminUser(adminStatus);
     }
   };
 
-  const handleRegisterClick = () => {
+  const handleRegisterClick = async () => {
     if (!isRegistered() && inputName.trim() && inputPhone.trim()) {
-      setUser(inputName.trim(), inputPhone.trim());
+      await setUser(inputName.trim(), inputLastName.trim(), inputPhone.trim());
     }
     if (isRegistered() || (inputName.trim() && inputPhone.trim())) {
       onRegister();
     }
+  };
+
+  const handleRulesConfirm = () => {
+    setRulesOpened(true);
+    setAgreedToRules(true);
+  };
+
+  const handleOpenRules = () => {
+    setShowRulesSheet(true);
   };
 
   return (
@@ -84,7 +103,13 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations }: WelcomeScreenProps) 
                 <Input
                   value={inputName}
                   onChange={(e) => setInputName(e.target.value)}
-                  placeholder="שם"
+                  placeholder="שם פרטי"
+                  className="h-14 text-base text-center"
+                />
+                <Input
+                  value={inputLastName}
+                  onChange={(e) => setInputLastName(e.target.value)}
+                  placeholder="שם משפחה"
                   className="h-14 text-base text-center"
                 />
                 <Input
@@ -101,18 +126,23 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations }: WelcomeScreenProps) 
                   <Checkbox
                     id="rules"
                     checked={agreedToRules}
-                    onCheckedChange={(checked) => setAgreedToRules(checked === true)}
+                    disabled={!rulesOpened}
+                    onCheckedChange={(checked) => {
+                      if (rulesOpened) {
+                        setAgreedToRules(checked === true);
+                      }
+                    }}
                   />
-                  <label htmlFor="rules" className="text-sm text-muted-foreground">
+                  <label htmlFor="rules" className="text-sm text-muted-foreground flex items-center gap-1">
                     קראתי ומסכים/ה ל
-                    <a 
-                      href="https://docs.google.com/document/d/1GTYyJSkrMjytvsKmBpEkYS8UJDZA0P8E4igQM1KFW1Y/edit?tab=t.0"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline mr-1"
+                    <button
+                      type="button"
+                      onClick={handleOpenRules}
+                      className="text-primary hover:underline flex items-center gap-1"
                     >
+                      <ScrollText className="w-3 h-3" />
                       חוקים וכללים
-                    </a>
+                    </button>
                   </label>
                 </div>
 
@@ -162,10 +192,28 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations }: WelcomeScreenProps) 
               <Users className="w-5 h-5 ml-2" />
               בוא נראה מי פה
             </Button>
+            
+            {/* Admin Button */}
+            {isAdminUser && (
+              <Button 
+                variant="outline" 
+                size="xl" 
+                className="w-full border-primary/50 text-primary hover:bg-primary/10"
+                onClick={onAdminUsers}
+              >
+                <Shield className="w-5 h-5 ml-2" />
+                ניהול משתמשים
+              </Button>
+            )}
           </div>
         </div>
       </div>
       
+      <RulesSheet 
+        open={showRulesSheet}
+        onOpenChange={setShowRulesSheet}
+        onConfirm={handleRulesConfirm}
+      />
     </div>
   );
 };

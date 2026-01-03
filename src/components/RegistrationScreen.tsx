@@ -403,29 +403,28 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  {count > 0 ? (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                          <Users className="w-4 h-4" />
-                          <span className="font-medium">{count}</span>
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-48 p-3" side="top">
-                        <div className="space-y-1">
-                          <p className="font-semibold text-sm mb-2">רשומים לשעה {formatHour(hour)}:</p>
-                          {hourNames.map((n, i) => (
-                            <p key={i} className="text-sm text-muted-foreground">{n}</p>
-                          ))}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  ) : (
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Users className="w-4 h-4" />
-                      <span className="font-medium">0</span>
-                    </div>
-                  )}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                        <Users className="w-4 h-4" />
+                        <span className="font-medium">{count}</span>
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-48 p-3" side="top">
+                      <div className="space-y-1">
+                        {count > 0 ? (
+                          <>
+                            <p className="font-semibold text-sm mb-2">רשומים לשעה {formatHour(hour)}:</p>
+                            {hourNames.map((n, i) => (
+                              <p key={i} className="text-sm text-muted-foreground">{n}</p>
+                            ))}
+                          </>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">אין כאן אף אחד בינתיים</p>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   
                   <button
                     onClick={() => openAddParticipants(hour)}
