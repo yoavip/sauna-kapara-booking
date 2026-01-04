@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useUserStore } from "@/stores/userStore";
-import { UserPlus, Users, Flame, Shield, ScrollText } from "lucide-react";
+import { UserPlus, Users, Flame, Shield } from "lucide-react";
 import saunaHero from "@/assets/sauna-hero.jpg";
 import ThermometerBackground from "./ThermometerBackground";
 import RulesSheet from "./RulesSheet";
@@ -133,15 +133,13 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
                       }
                     }}
                   />
-                  <label htmlFor="rules" className="text-sm text-muted-foreground flex items-center gap-1">
-                    קראתי ומסכים/ה ל
+                  <label htmlFor="rules" className="text-sm text-muted-foreground">
                     <button
                       type="button"
                       onClick={handleOpenRules}
-                      className="text-primary hover:underline flex items-center gap-1"
+                      className="text-primary hover:underline font-medium"
                     >
-                      <ScrollText className="w-3 h-3" />
-                      חוקים וכללים
+                      לחצו כאן לקרוא ולאשר והופה לסאונה
                     </button>
                   </label>
                 </div>

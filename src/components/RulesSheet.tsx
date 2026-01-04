@@ -6,7 +6,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ScrollText, CheckCircle } from "lucide-react";
+import { ScrollText } from "lucide-react";
 
 interface RulesSheetProps {
   open: boolean;
@@ -82,14 +82,12 @@ const RulesSheet = ({ open, onOpenChange, onConfirm }: RulesSheetProps) => {
 
         <div className="flex-shrink-0 pt-4 border-t border-border">
           <Button
-            variant="hero"
-            size="xl"
-            className="w-full"
+            variant="default"
+            size="default"
             onClick={handleConfirm}
             disabled={loading || error}
           >
-            <CheckCircle className="w-5 h-5 ml-2" />
-            קראתי, הבנתי ואני מתחייב/ת להישמע לכל הכללים
+            מאשר.ת
           </Button>
         </div>
       </SheetContent>
