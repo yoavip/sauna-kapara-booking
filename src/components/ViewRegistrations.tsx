@@ -7,6 +7,7 @@ import { useUserStore } from "@/stores/userStore";
 import { toast } from "sonner";
 import { trackPageView, trackCancellation } from "@/lib/analytics";
 import ThermometerBackground from "./ThermometerBackground";
+import { getDisplayNamesForRegistrations } from "@/lib/displayName";
 
 
 interface ViewRegistrationsProps {
@@ -16,6 +17,7 @@ interface ViewRegistrationsProps {
 interface Registration {
   id: string;
   name: string;
+  displayName: string;
   phone: string;
   hour: number;
 }
@@ -26,18 +28,21 @@ interface HourGroup {
 }
 
 const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
-  const { name, phone, isAdmin } = useUserStore();
+  const { name, phone, checkAdminSync } = useUserStore();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [hourGroups, setHourGroups] = useState<HourGroup[]>([]);
   const [loading, setLoading] = useState(true);
+  const [admin, setAdmin] = useState(checkAdminSync());
 
   const isToday = isSameDay(selectedDate, new Date());
   const currentHour = new Date().getHours();
   const isPastDate = isBefore(startOfDay(selectedDate), startOfDay(new Date()));
-  const admin = isAdmin();
 
   useEffect(() => {
     trackPageView('view_registrations', name, phone);
+    // Check admin status
+    const { isAdmin } = useUserStore.getState();
+    isAdmin().then(setAdmin);
   }, []);
 
   const fetchRegistrations = async () => {
@@ -57,6 +62,9 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
       return;
     }
 
+    // Get display names
+    const displayNames = await getDisplayNamesForRegistrations(data || []);
+
     // Group by hour - only include hours with registrations
     const groups: Record<number, Registration[]> = {};
     
@@ -64,7 +72,8 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
       if (!groups[reg.hour]) {
         groups[reg.hour] = [];
       }
-      groups[reg.hour].push(reg);
+      const displayName = displayNames.get(`${reg.name}|${reg.phone}`) || reg.name;
+      groups[reg.hour].push({ ...reg, displayName });
     });
 
     // Create ordered array - only hours with registrations
@@ -149,8 +158,8 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
   const canCancelRegistration = (reg: Registration) => {
     // Admin can delete anyone
     if (admin) return true;
-    // User can delete their own registrations (same phone = registered by them)
-    return reg.phone === phone;
+    // User can ONLY delete their own registrations (same name AND same phone)
+    return reg.name === name && reg.phone === phone;
   };
 
   return (
@@ -271,7 +280,7 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
                           >
                             <User className={`w-4 h-4 ${isMyRegistration ? 'text-primary' : 'text-muted-foreground'}`} />
                             <span className={`font-medium ${isMyRegistration ? 'text-primary' : 'text-foreground'}`}>
-                              {reg.name}
+                              {reg.displayName}
                             </span>
                             {canCancel && !isPastDate && (
                               <button

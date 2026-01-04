@@ -19,6 +19,7 @@ import { format, addDays, isSameDay, startOfDay } from "date-fns";
 import { he } from "date-fns/locale";
 import AddParticipantsSheet from "./AddParticipantsSheet";
 import ThermometerBackground from "./ThermometerBackground";
+import { refreshDisplayNameCache, getDisplayNameSync } from "@/lib/displayName";
 
 import { trackPageView, trackRegistration, trackCancellation } from "@/lib/analytics";
 
@@ -29,7 +30,7 @@ interface RegistrationScreenProps {
 interface HourCount {
   hour: number;
   count: number;
-  names: string[];
+  displayNames: string[];
 }
 
 interface MyRegistration {
@@ -82,21 +83,40 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
       return;
     }
 
+    // Refresh display name cache
+    await refreshDisplayNameCache();
+
+    // Get user data for registrations
+    const phones = [...new Set(data?.map(r => r.phone) || [])];
+    const { data: users } = await supabase
+      .from('users')
+      .select('name, last_name, phone')
+      .in('phone', phones);
+
+    const phoneToUser = new Map(users?.map(u => [u.phone, u]) || []);
+
     // Count per hour
     const counts: Record<number, number> = {};
-    const names: Record<number, string[]> = {};
+    const displayNames: Record<number, string[]> = {};
     const myRegs: MyRegistration[] = [];
     
     data?.forEach(reg => {
       counts[reg.hour] = (counts[reg.hour] || 0) + 1;
-      if (!names[reg.hour]) names[reg.hour] = [];
-      names[reg.hour].push(reg.name);
+      if (!displayNames[reg.hour]) displayNames[reg.hour] = [];
+      
+      // Get display name
+      const user = phoneToUser.get(reg.phone);
+      const displayName = user 
+        ? getDisplayNameSync(user.name, user.last_name)
+        : reg.name;
+      displayNames[reg.hour].push(displayName);
+      
       if (reg.name === name && reg.phone === phone) {
         myRegs.push({ id: reg.id, hour: reg.hour });
       }
     });
 
-    setHourCounts(hours.map(h => ({ hour: h, count: counts[h] || 0, names: names[h] || [] })));
+    setHourCounts(hours.map(h => ({ hour: h, count: counts[h] || 0, displayNames: displayNames[h] || [] })));
     setMyRegistrations(myRegs);
   };
 
@@ -376,7 +396,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
             {isToday ? 'שעות היום' : `שעות ${getDateLabel(selectedDate)}`}
           </h2>
           
-          {hourCounts.map(({ hour, count, names: hourNames }) => {
+          {hourCounts.map(({ hour, count, displayNames: hourDisplayNames }) => {
             const isMyRegistration = isRegisteredForHour(hour);
             const isCurrentHour = isToday && hour === currentHour;
             
@@ -415,7 +435,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
                         {count > 0 ? (
                           <>
                             <p className="font-semibold text-sm mb-2">רשומים לשעה {formatHour(hour)}:</p>
-                            {hourNames.map((n, i) => (
+                            {hourDisplayNames.map((n, i) => (
                               <p key={i} className="text-sm text-muted-foreground">{n}</p>
                             ))}
                           </>
