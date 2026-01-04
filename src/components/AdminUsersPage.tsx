@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Shield, ShieldOff, Users, Download, FileText } from "lucide-react";
+import { ArrowRight, Shield, Users, Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -18,17 +18,17 @@ interface AdminUsersPageProps {
   onBack: () => void;
 }
 
-interface UserWithRole {
+interface UserWithStats {
   id: string;
   name: string;
   last_name: string | null;
   phone: string;
   created_at: string;
-  isAdmin: boolean;
+  registrationCount: number;
 }
 
 const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
-  const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [users, setUsers] = useState<UserWithStats[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchUsers = async () => {
@@ -44,62 +44,28 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
       return;
     }
 
-    // Fetch all admin roles
-    const { data: rolesData, error: rolesError } = await supabase
-      .from('user_roles')
-      .select('user_id, role')
-      .eq('role', 'admin');
+    // Fetch registration counts per phone
+    const { data: registrations } = await supabase
+      .from('registrations')
+      .select('phone');
 
-    if (rolesError) {
-      console.error('Error fetching roles:', rolesError);
-    }
+    const regCounts: Record<string, number> = {};
+    registrations?.forEach(r => {
+      regCounts[r.phone] = (regCounts[r.phone] || 0) + 1;
+    });
 
-    const adminUserIds = new Set(rolesData?.map(r => r.user_id) || []);
-
-    const usersWithRoles: UserWithRole[] = usersData.map(user => ({
+    const usersWithStats: UserWithStats[] = usersData.map(user => ({
       ...user,
-      isAdmin: adminUserIds.has(user.id)
+      registrationCount: regCounts[user.phone] || 0
     }));
 
-    setUsers(usersWithRoles);
+    setUsers(usersWithStats);
     setLoading(false);
   };
 
   useEffect(() => {
     fetchUsers();
   }, []);
-
-  const toggleAdmin = async (user: UserWithRole) => {
-    if (user.isAdmin) {
-      // Remove admin role
-      const { error } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('role', 'admin');
-
-      if (error) {
-        console.error('Error removing admin:', error);
-        toast.error('שגיאה בהסרת הרשאות אדמין');
-      } else {
-        toast.success(`הוסרו הרשאות אדמין מ-${user.name}`);
-        fetchUsers();
-      }
-    } else {
-      // Add admin role
-      const { error } = await supabase
-        .from('user_roles')
-        .insert({ user_id: user.id, role: 'admin' });
-
-      if (error) {
-        console.error('Error adding admin:', error);
-        toast.error('שגיאה בהוספת הרשאות אדמין');
-      } else {
-        toast.success(`${user.name} הפך לאדמין`);
-        fetchUsers();
-      }
-    }
-  };
 
   const exportRegistrationsCSV = async () => {
     const { data, error } = await supabase
@@ -224,39 +190,18 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-right">שם</TableHead>
-                  <TableHead className="text-right">טלפון</TableHead>
+                  <TableHead className="text-right">שם משפחה</TableHead>
                   <TableHead className="text-right">תאריך הצטרפות</TableHead>
-                  <TableHead className="text-right">אדמין</TableHead>
+                  <TableHead className="text-right">מספר הרשמות</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {users.map(user => (
                   <TableRow key={user.id}>
-                    <TableCell className="font-medium">
-                      {user.name}
-                      {user.last_name && ` ${user.last_name.charAt(0)}'`}
-                    </TableCell>
-                    <TableCell dir="ltr" className="text-left">{user.phone}</TableCell>
+                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell>{user.last_name || '-'}</TableCell>
                     <TableCell>{format(new Date(user.created_at), 'dd/MM/yyyy')}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant={user.isAdmin ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => toggleAdmin(user)}
-                      >
-                        {user.isAdmin ? (
-                          <>
-                            <ShieldOff className="w-4 h-4 ml-1" />
-                            הסר
-                          </>
-                        ) : (
-                          <>
-                            <Shield className="w-4 h-4 ml-1" />
-                            הפוך לאדמין
-                          </>
-                        )}
-                      </Button>
-                    </TableCell>
+                    <TableCell>{user.registrationCount}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
