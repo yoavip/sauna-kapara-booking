@@ -36,7 +36,7 @@ export const refreshDisplayNameCache = async (): Promise<Map<string, string>> =>
     const key = `${u.name}|${u.last_name || ''}`;
     if (firstNameCounts[u.name] > 1 && u.last_name) {
       // Multiple users with same first name - show first initial of last name
-      displayNameCache.set(key, `${u.name} ${u.last_name.charAt(0)}'`);
+      displayNameCache.set(key, `${u.name} ${u.last_name.charAt(0)}`);
     } else {
       displayNameCache.set(key, u.name);
     }

@@ -19,7 +19,8 @@ import { format, addDays, isSameDay, startOfDay } from "date-fns";
 import { he } from "date-fns/locale";
 import AddParticipantsSheet from "./AddParticipantsSheet";
 import ThermometerBackground from "./ThermometerBackground";
-import { refreshDisplayNameCache, getDisplayNameSync } from "@/lib/displayName";
+import { refreshDisplayNameCache, getDisplayNameSync, getDisplayName } from "@/lib/displayName";
+import { useUserStore as userStoreHook } from "@/stores/userStore";
 
 import { trackPageView, trackRegistration, trackCancellation } from "@/lib/analytics";
 
@@ -39,13 +40,15 @@ interface MyRegistration {
 }
 
 const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
-  const { name, phone } = useUserStore();
+  const { name, lastName, phone, checkAdminSync } = useUserStore();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [hourCounts, setHourCounts] = useState<HourCount[]>([]);
   const [isRegistering, setIsRegistering] = useState<number | null>(null);
   const [myRegistrations, setMyRegistrations] = useState<MyRegistration[]>([]);
   const [showAddParticipants, setShowAddParticipants] = useState(false);
   const [pendingHour, setPendingHour] = useState<number | null>(null);
+  const [displayName, setDisplayName] = useState<string>(name);
+  const isAdminUser = checkAdminSync();
   
   // State for cancel confirmation dialog
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -122,7 +125,9 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
 
   useEffect(() => {
     trackPageView('registration', name, phone);
-  }, []);
+    // Fetch display name
+    getDisplayName(name, lastName).then(setDisplayName);
+  }, [name, lastName]);
 
   useEffect(() => {
     fetchRegistrations();
@@ -339,8 +344,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
         {/* User Info */}
         <div className="bg-card rounded-2xl p-6 mb-6 shadow-warm">
           <p className="text-muted-foreground text-sm">נרשם בשם:</p>
-          <p className="text-xl font-bold text-foreground">{name}</p>
-          <p className="text-muted-foreground text-sm" dir="ltr">{phone}</p>
+          <p className="text-xl font-bold text-foreground">{displayName}</p>
         </div>
 
         {/* Date Selector */}
@@ -375,8 +379,8 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
           </div>
         </div>
 
-        {/* Register Now Button - only show for today */}
-        {isToday && (
+        {/* Register Now Button - only show for today, hide for admin */}
+        {isToday && !isAdminUser && (
           <Button
             variant="hero"
             size="xl"
@@ -469,7 +473,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
                       variant="default"
                       size="sm"
                       onClick={() => handleRegister(hour)}
-                      disabled={isRegistering === hour}
+                      disabled={isRegistering === hour || isAdminUser}
                     >
                       {isRegistering === hour ? '...' : 'הירשם'}
                     </Button>

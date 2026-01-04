@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Sheet,
   SheetContent,
@@ -20,12 +20,27 @@ const RulesSheet = ({ open, onOpenChange, onConfirm }: RulesSheetProps) => {
   const [rulesContent, setRulesContent] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [scrolledToBottom, setScrolledToBottom] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open && !rulesContent) {
       fetchRules();
     }
+    if (open) {
+      setScrolledToBottom(false);
+    }
   }, [open]);
+
+  const handleScroll = () => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      if (scrollTop + clientHeight >= scrollHeight - 20) {
+        setScrolledToBottom(true);
+      }
+    }
+  };
 
   const fetchRules = async () => {
     setLoading(true);
@@ -61,7 +76,13 @@ const RulesSheet = ({ open, onOpenChange, onConfirm }: RulesSheetProps) => {
           </SheetTitle>
         </SheetHeader>
         
-        <div className="flex-1 overflow-y-auto pb-4">
+        <p className="text-sm text-muted-foreground mb-4 flex-shrink-0">בבקשה לקרוא הכל ואז לאשר</p>
+        
+        <div 
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto pb-4"
+        >
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <p className="text-muted-foreground">טוען תקנון...</p>
@@ -85,7 +106,7 @@ const RulesSheet = ({ open, onOpenChange, onConfirm }: RulesSheetProps) => {
             variant="default"
             size="default"
             onClick={handleConfirm}
-            disabled={loading || error}
+            disabled={loading || error || !scrolledToBottom}
           >
             מאשר.ת
           </Button>

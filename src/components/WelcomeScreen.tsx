@@ -128,7 +128,9 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
                     checked={agreedToRules}
                     disabled={!rulesOpened}
                     onCheckedChange={(checked) => {
-                      if (rulesOpened) {
+                      if (!rulesOpened) {
+                        handleOpenRules();
+                      } else {
                         setAgreedToRules(checked === true);
                       }
                     }}
