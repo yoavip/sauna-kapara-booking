@@ -151,7 +151,7 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
                   variant="warm"
                   size="lg"
                   className="w-full"
-                  disabled={!inputName.trim() || !inputPhone.trim() || !agreedToRules}
+                  disabled={!inputName.trim() || !inputLastName.trim() || !inputPhone.trim() || !agreedToRules}
                 >
                   שמור
                 </Button>

@@ -52,34 +52,60 @@ export const getDisplayNameSync = (firstName: string, lastName: string | null): 
   return displayNameCache.get(key) || firstName;
 };
 
-// Get display names for a list of registrations
-export const getDisplayNamesForRegistrations = async (
-  registrations: { name: string; phone: string }[]
-): Promise<Map<string, string>> => {
-  // Get all phones to look up last names
-  const phones = [...new Set(registrations.map(r => r.phone))];
+// Get display name for a specific name (looks up user by name to get last_name)
+export const getDisplayNameForParticipant = async (participantName: string): Promise<string> => {
+  // Refresh cache if needed
+  if (Date.now() - lastCacheUpdate > CACHE_TTL) {
+    await refreshDisplayNameCache();
+  }
   
+  // Look up user by name to get their last_name
   const { data: users } = await supabase
     .from('users')
-    .select('name, last_name, phone')
-    .in('phone', phones);
+    .select('name, last_name')
+    .eq('name', participantName);
   
-  const phoneToUser = new Map(users?.map(u => [u.phone, u]) || []);
+  if (users && users.length > 0) {
+    const user = users[0];
+    const key = `${user.name}|${user.last_name || ''}`;
+    return displayNameCache.get(key) || participantName;
+  }
   
-  // Refresh the main cache
+  return participantName;
+};
+
+// Get display names for a list of participant names
+export const getDisplayNamesForParticipants = async (
+  participantNames: string[]
+): Promise<string[]> => {
+  // Refresh cache
   await refreshDisplayNameCache();
   
-  // Build display names for these specific registrations
-  const result = new Map<string, string>();
-  registrations.forEach(reg => {
-    const user = phoneToUser.get(reg.phone);
-    if (user) {
-      result.set(`${reg.name}|${reg.phone}`, getDisplayNameSync(user.name, user.last_name));
-    } else {
-      // Fallback if user not found (e.g., additional participants)
-      result.set(`${reg.name}|${reg.phone}`, reg.name);
+  // Get unique names
+  const uniqueNames = [...new Set(participantNames)];
+  
+  // Look up all users by name
+  const { data: users } = await supabase
+    .from('users')
+    .select('name, last_name')
+    .in('name', uniqueNames);
+  
+  // Create a map from name to user data
+  const nameToUser = new Map<string, { name: string; last_name: string | null }>();
+  users?.forEach(u => {
+    // If multiple users have same first name, just use the first one found
+    if (!nameToUser.has(u.name)) {
+      nameToUser.set(u.name, u);
     }
   });
   
-  return result;
+  // Build display names in original order
+  return participantNames.map(name => {
+    const user = nameToUser.get(name);
+    if (user) {
+      const key = `${user.name}|${user.last_name || ''}`;
+      return displayNameCache.get(key) || name;
+    }
+    return name;
+  });
 };
