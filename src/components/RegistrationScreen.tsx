@@ -107,12 +107,8 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
       counts[reg.hour] = (counts[reg.hour] || 0) + 1;
       if (!displayNames[reg.hour]) displayNames[reg.hour] = [];
       
-      // Get display name
-      const user = phoneToUser.get(reg.phone);
-      const displayName = user 
-        ? getDisplayNameSync(user.name, user.last_name)
-        : reg.name;
-      displayNames[reg.hour].push(displayName);
+      // Use the registration name directly - this shows the actual participant name
+      displayNames[reg.hour].push(reg.name);
       
       if (reg.name === name && reg.phone === phone) {
         myRegs.push({ id: reg.id, hour: reg.hour });
@@ -345,6 +341,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
         <div className="bg-card rounded-2xl p-6 mb-6 shadow-warm">
           <p className="text-muted-foreground text-sm">נרשם בשם:</p>
           <p className="text-xl font-bold text-foreground">{displayName}</p>
+          <p className="text-sm text-muted-foreground">{phone}</p>
         </div>
 
         {/* Date Selector */}

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '@/integrations/supabase/client';
+import { trackUserCreated } from '@/lib/analytics';
 
 interface UserState {
   name: string;
@@ -49,6 +50,9 @@ export const useUserStore = create<UserState>()(
             .select('id')
             .single();
           userId = newUser?.id;
+          
+          // Track new user creation
+          trackUserCreated(name, phone);
         }
 
         // Check if admin

@@ -62,18 +62,16 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
       return;
     }
 
-    // Get display names
-    const displayNames = await getDisplayNamesForRegistrations(data || []);
-
     // Group by hour - only include hours with registrations
+    // Note: For additional participants, we use their name directly (they're not in the users table)
     const groups: Record<number, Registration[]> = {};
     
     data?.forEach(reg => {
       if (!groups[reg.hour]) {
         groups[reg.hour] = [];
       }
-      const displayName = displayNames.get(`${reg.name}|${reg.phone}`) || reg.name;
-      groups[reg.hour].push({ ...reg, displayName });
+      // Use the registration name directly - for additional participants, this is their actual name
+      groups[reg.hour].push({ ...reg, displayName: reg.name });
     });
 
     // Create ordered array - only hours with registrations
