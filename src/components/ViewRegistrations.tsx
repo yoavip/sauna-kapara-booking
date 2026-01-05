@@ -7,7 +7,7 @@ import { useUserStore } from "@/stores/userStore";
 import { toast } from "sonner";
 import { trackPageView, trackCancellation } from "@/lib/analytics";
 import ThermometerBackground from "./ThermometerBackground";
-import { getDisplayNamesForRegistrations } from "@/lib/displayName";
+import { getDisplayNamesForParticipants } from "@/lib/displayName";
 
 
 interface ViewRegistrationsProps {
@@ -62,16 +62,19 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
       return;
     }
 
+    // Get display names for all participants
+    const participantNames = data?.map(r => r.name) || [];
+    const displayNames = await getDisplayNamesForParticipants(participantNames);
+
     // Group by hour - only include hours with registrations
-    // Note: For additional participants, we use their name directly (they're not in the users table)
     const groups: Record<number, Registration[]> = {};
     
-    data?.forEach(reg => {
+    data?.forEach((reg, index) => {
       if (!groups[reg.hour]) {
         groups[reg.hour] = [];
       }
-      // Use the registration name directly - for additional participants, this is their actual name
-      groups[reg.hour].push({ ...reg, displayName: reg.name });
+      // Use display name from the lookup
+      groups[reg.hour].push({ ...reg, displayName: displayNames[index] || reg.name });
     });
 
     // Create ordered array - only hours with registrations

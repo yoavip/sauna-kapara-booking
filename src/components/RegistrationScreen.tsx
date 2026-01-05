@@ -19,8 +19,7 @@ import { format, addDays, isSameDay, startOfDay } from "date-fns";
 import { he } from "date-fns/locale";
 import AddParticipantsSheet from "./AddParticipantsSheet";
 import ThermometerBackground from "./ThermometerBackground";
-import { refreshDisplayNameCache, getDisplayNameSync, getDisplayName } from "@/lib/displayName";
-import { useUserStore as userStoreHook } from "@/stores/userStore";
+import { refreshDisplayNameCache, getDisplayName } from "@/lib/displayName";
 
 import { trackPageView, trackRegistration, trackCancellation } from "@/lib/analytics";
 
@@ -100,22 +99,33 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
 
     // Count per hour
     const counts: Record<number, number> = {};
-    const displayNames: Record<number, string[]> = {};
+    const namesByHour: Record<number, string[]> = {};
     const myRegs: MyRegistration[] = [];
     
     data?.forEach(reg => {
       counts[reg.hour] = (counts[reg.hour] || 0) + 1;
-      if (!displayNames[reg.hour]) displayNames[reg.hour] = [];
+      if (!namesByHour[reg.hour]) namesByHour[reg.hour] = [];
       
-      // Use the registration name directly - this shows the actual participant name
-      displayNames[reg.hour].push(reg.name);
+      // Collect names for each hour
+      namesByHour[reg.hour].push(reg.name);
       
       if (reg.name === name && reg.phone === phone) {
         myRegs.push({ id: reg.id, hour: reg.hour });
       }
     });
 
-    setHourCounts(hours.map(h => ({ hour: h, count: counts[h] || 0, displayNames: displayNames[h] || [] })));
+    // Import and get display names for popover
+    const { getDisplayNamesForParticipants } = await import('@/lib/displayName');
+    
+    // Build hourCounts with proper display names
+    const hourCountsPromises = hours.map(async (h) => {
+      const names = namesByHour[h] || [];
+      const displayNames = names.length > 0 ? await getDisplayNamesForParticipants(names) : [];
+      return { hour: h, count: counts[h] || 0, displayNames };
+    });
+
+    const resolvedHourCounts = await Promise.all(hourCountsPromises);
+    setHourCounts(resolvedHourCounts);
     setMyRegistrations(myRegs);
   };
 
