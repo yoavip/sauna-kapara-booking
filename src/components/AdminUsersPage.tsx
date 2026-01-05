@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Shield, Users, Download, FileText } from "lucide-react";
+import { ArrowRight, Shield, Users, Download, FileText, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -13,6 +13,8 @@ import {
 import { toast } from "sonner";
 import ThermometerBackground from "./ThermometerBackground";
 import { format } from "date-fns";
+import { trackPageView } from "@/lib/analytics";
+import { useUserStore } from "@/stores/userStore";
 
 interface AdminUsersPageProps {
   onBack: () => void;
@@ -25,11 +27,17 @@ interface UserWithStats {
   phone: string;
   created_at: string;
   registrationCount: number;
+  lastSeen: string | null;
 }
 
 const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
+  const { name, phone } = useUserStore();
   const [users, setUsers] = useState<UserWithStats[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    trackPageView('admin_management', name, phone);
+  }, []);
 
   const fetchUsers = async () => {
     // Fetch all users
@@ -54,9 +62,23 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
       regCounts[r.phone] = (regCounts[r.phone] || 0) + 1;
     });
 
+    // Fetch last activity per user from analytics
+    const { data: analytics } = await supabase
+      .from('analytics')
+      .select('user_phone, created_at')
+      .order('created_at', { ascending: false });
+
+    const lastSeenMap: Record<string, string> = {};
+    analytics?.forEach(a => {
+      if (a.user_phone && !lastSeenMap[a.user_phone]) {
+        lastSeenMap[a.user_phone] = a.created_at;
+      }
+    });
+
     const usersWithStats: UserWithStats[] = usersData.map(user => ({
       ...user,
-      registrationCount: regCounts[user.phone] || 0
+      registrationCount: regCounts[user.phone] || 0,
+      lastSeen: lastSeenMap[user.phone] || null
     }));
 
     setUsers(usersWithStats);
@@ -71,7 +93,7 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
     const { data, error } = await supabase
       .from('registrations')
       .select('*')
-      .order('registered_at', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (error) {
       toast.error('שגיאה בייצוא נתונים');
@@ -79,12 +101,13 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
     }
 
     const csvContent = [
-      ['שם', 'טלפון', 'שעה', 'תאריך הרשמה'].join(','),
+      ['שם', 'טלפון', 'שעה מוזמנת', 'תאריך מוזמן', 'זמן ביצוע הרשמה'].join(','),
       ...data.map(r => [
         r.name,
         r.phone,
-        r.hour,
-        format(new Date(r.registered_at), 'dd/MM/yyyy HH:mm')
+        `${r.hour}:00`,
+        format(new Date(r.registered_at), 'dd/MM/yyyy'),
+        format(new Date(r.created_at), 'dd/MM/yyyy HH:mm')
       ].join(','))
     ].join('\n');
 
@@ -113,19 +136,99 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
       regCounts[r.phone] = (regCounts[r.phone] || 0) + 1;
     });
 
+    // Fetch last activity per user from analytics
+    const { data: analytics } = await supabase
+      .from('analytics')
+      .select('user_phone, created_at')
+      .order('created_at', { ascending: false });
+
+    const lastSeenMap: Record<string, string> = {};
+    analytics?.forEach(a => {
+      if (a.user_phone && !lastSeenMap[a.user_phone]) {
+        lastSeenMap[a.user_phone] = a.created_at;
+      }
+    });
+
     const csvContent = [
-      ['שם', 'שם משפחה', 'טלפון', 'מספר הרשמות', 'תאריך הצטרפות'].join(','),
+      ['שם', 'שם משפחה', 'טלפון', 'מספר הרשמות', 'תאריך הצטרפות', 'נראה לאחרונה'].join(','),
       ...usersData.map(u => [
         u.name,
         u.last_name || '',
         u.phone,
         regCounts[u.phone] || 0,
-        format(new Date(u.created_at), 'dd/MM/yyyy')
+        format(new Date(u.created_at), 'dd/MM/yyyy'),
+        lastSeenMap[u.phone] ? format(new Date(lastSeenMap[u.phone]), 'dd/MM/yyyy HH:mm') : ''
       ].join(','))
     ].join('\n');
 
     downloadCSV(csvContent, 'users_stats.csv');
     toast.success('קובץ סטטיסטיקות יוצא בהצלחה');
+  };
+
+  const exportActivityLogCSV = async () => {
+    const { data, error } = await supabase
+      .from('analytics')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      toast.error('שגיאה בייצוא נתונים');
+      return;
+    }
+
+    const eventTypeLabels: Record<string, string> = {
+      'page_view': 'צפייה בדף',
+      'registration': 'הרשמה',
+      'cancellation': 'ביטול הרשמה',
+      'user_created': 'יוזר חדש נוצר',
+    };
+
+    const formatEventDetails = (event: typeof data[0]) => {
+      const eventData = event.event_data as Record<string, unknown> | null;
+      if (!eventData) return '';
+      
+      if (event.event_type === 'page_view') {
+        const pageLabels: Record<string, string> = {
+          'registration': 'דף הרשמה',
+          'view_registrations': 'דף מי כאן',
+          'admin_management': 'דף ניהול אדמין'
+        };
+        return pageLabels[eventData.page as string] || eventData.page as string || '';
+      }
+      
+      if (event.event_type === 'registration') {
+        const parts = [];
+        if (eventData.date) parts.push(`תאריך: ${eventData.date}`);
+        if (eventData.hour !== undefined) parts.push(`שעה: ${eventData.hour}:00`);
+        if (eventData.additional_participants && Number(eventData.additional_participants) > 0) {
+          parts.push(`משתתפים נוספים: ${eventData.additional_participants}`);
+        }
+        return parts.join(' | ');
+      }
+      
+      if (event.event_type === 'cancellation') {
+        const parts = [];
+        if (eventData.date) parts.push(`תאריך: ${eventData.date}`);
+        if (eventData.hour !== undefined) parts.push(`שעה: ${eventData.hour}:00`);
+        return parts.join(' | ');
+      }
+      
+      return '';
+    };
+
+    const csvContent = [
+      ['זמן', 'סוג פעולה', 'שם משתמש', 'טלפון', 'פרטים'].join(','),
+      ...data.map(e => [
+        format(new Date(e.created_at), 'dd/MM/yyyy HH:mm:ss'),
+        eventTypeLabels[e.event_type] || e.event_type,
+        e.user_name || '',
+        e.user_phone || '',
+        formatEventDetails(e)
+      ].join(','))
+    ].join('\n');
+
+    downloadCSV(csvContent, 'activity_log.csv');
+    toast.success('לוג פעילות יוצא בהצלחה');
   };
 
   const downloadCSV = (content: string, filename: string) => {
@@ -165,14 +268,18 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
 
       <main className="container mx-auto px-4 py-8 relative z-10">
         {/* Export Buttons */}
-        <div className="flex gap-3 mb-6">
-          <Button variant="outline" onClick={exportRegistrationsCSV} className="flex-1">
+        <div className="flex flex-wrap gap-3 mb-6">
+          <Button variant="outline" onClick={exportRegistrationsCSV} className="flex-1 min-w-[140px]">
             <Download className="w-4 h-4 ml-2" />
             ייצוא הרשמות
           </Button>
-          <Button variant="outline" onClick={exportUsersStatsCSV} className="flex-1">
+          <Button variant="outline" onClick={exportUsersStatsCSV} className="flex-1 min-w-[140px]">
             <FileText className="w-4 h-4 ml-2" />
             ייצוא סטטיסטיקות
+          </Button>
+          <Button variant="outline" onClick={exportActivityLogCSV} className="flex-1 min-w-[140px]">
+            <Activity className="w-4 h-4 ml-2" />
+            ייצוא לוג פעילות
           </Button>
         </div>
 

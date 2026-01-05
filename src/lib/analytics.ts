@@ -5,7 +5,7 @@ export type AnalyticsEventType =
   | 'page_view' 
   | 'registration' 
   | 'cancellation' 
-  | 'share';
+  | 'user_created';
 
 interface AnalyticsEvent {
   event_type: AnalyticsEventType;
@@ -60,10 +60,10 @@ export const trackCancellation = (hour: number, date: string, userName: string, 
   });
 };
 
-export const trackShare = (method: string, userName?: string, userPhone?: string) => {
+export const trackUserCreated = (userName: string, userPhone: string) => {
   trackEvent({
-    event_type: 'share',
-    event_data: { method },
+    event_type: 'user_created',
+    event_data: {},
     user_name: userName,
     user_phone: userPhone,
   });
