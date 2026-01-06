@@ -17,7 +17,7 @@ import { ArrowRight, Zap, Users, Clock, CalendarDays, ChevronLeft, ChevronRight,
 import { toast } from "sonner";
 import { format, addDays, isSameDay, startOfDay } from "date-fns";
 import { he } from "date-fns/locale";
-import AddParticipantsSheet from "./AddParticipantsSheet";
+import AddSingleParticipantSheet from "./AddSingleParticipantSheet";
 import ThermometerBackground from "./ThermometerBackground";
 import { refreshDisplayNameCache, getDisplayName } from "@/lib/displayName";
 
@@ -290,9 +290,9 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
     setPendingRegId(null);
   };
 
-  const handleAddParticipantsConfirm = (names: string[]) => {
+  const handleAddParticipantConfirm = (participantName: string) => {
     if (pendingHour !== null) {
-      handleRegister(pendingHour, names);
+      handleRegister(pendingHour, [participantName]);
       setPendingHour(null);
     }
   };
@@ -492,10 +492,10 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
         </div>
       </main>
 
-      <AddParticipantsSheet
+      <AddSingleParticipantSheet
         open={showAddParticipants}
         onOpenChange={setShowAddParticipants}
-        onConfirm={handleAddParticipantsConfirm}
+        onConfirm={handleAddParticipantConfirm}
         existingRegistrations={pendingHour !== null ? (hourCounts.find(h => h.hour === pendingHour)?.displayNames || []) : []}
       />
 
