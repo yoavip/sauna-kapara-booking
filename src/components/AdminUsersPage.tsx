@@ -203,6 +203,9 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
         if (eventData.additional_participants && Number(eventData.additional_participants) > 0) {
           parts.push(`משתתפים נוספים: ${eventData.additional_participants}`);
         }
+        if (eventData.participant_names && Array.isArray(eventData.participant_names) && eventData.participant_names.length > 0) {
+          parts.push(`שמות: ${(eventData.participant_names as string[]).join(', ')}`);
+        }
         return parts.join(' | ');
       }
       
@@ -216,12 +219,18 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
       return '';
     };
 
+    const formatUserName = (event: typeof data[0]) => {
+      const eventData = event.event_data as Record<string, unknown> | null;
+      const lastName = eventData?.user_last_name as string || '';
+      return lastName ? `${event.user_name || ''} ${lastName}` : (event.user_name || '');
+    };
+
     const csvContent = [
-      ['זמן', 'סוג פעולה', 'שם משתמש', 'טלפון', 'פרטים'].join(','),
+      ['זמן', 'סוג פעולה', 'שם מלא', 'טלפון', 'פרטים'].join(','),
       ...data.map(e => [
         format(new Date(e.created_at), 'dd/MM/yyyy HH:mm:ss'),
         eventTypeLabels[e.event_type] || e.event_type,
-        e.user_name || '',
+        formatUserName(e),
         e.user_phone || '',
         formatEventDetails(e)
       ].join(','))
