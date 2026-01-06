@@ -28,7 +28,7 @@ interface HourGroup {
 }
 
 const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
-  const { name, phone, checkAdminSync } = useUserStore();
+  const { name, lastName, phone, checkAdminSync } = useUserStore();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [hourGroups, setHourGroups] = useState<HourGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -128,7 +128,7 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
       toast.error('שגיאה בביטול ההרשמה');
     } else {
       toast.success(`ההרשמה של ${regName} בוטלה`);
-      trackCancellation(hour, format(selectedDate, 'yyyy-MM-dd'), name, phone);
+      trackCancellation(hour, format(selectedDate, 'yyyy-MM-dd'), name, phone, lastName);
     }
   };
 

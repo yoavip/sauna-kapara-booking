@@ -42,28 +42,42 @@ export const trackPageView = (pageName: string, userName?: string, userPhone?: s
   });
 };
 
-export const trackRegistration = (hour: number, date: string, userName: string, userPhone: string, additionalCount?: number) => {
+export const trackRegistration = (
+  hour: number, 
+  date: string, 
+  userName: string, 
+  userPhone: string, 
+  userLastName?: string,
+  additionalCount?: number,
+  participantNames?: string[]
+) => {
   trackEvent({
     event_type: 'registration',
-    event_data: { hour, date, additional_participants: additionalCount || 0 },
+    event_data: { 
+      hour, 
+      date, 
+      user_last_name: userLastName || '',
+      additional_participants: additionalCount || 0,
+      participant_names: participantNames || []
+    },
     user_name: userName,
     user_phone: userPhone,
   });
 };
 
-export const trackCancellation = (hour: number, date: string, userName: string, userPhone: string) => {
+export const trackCancellation = (hour: number, date: string, userName: string, userPhone: string, userLastName?: string) => {
   trackEvent({
     event_type: 'cancellation',
-    event_data: { hour, date },
+    event_data: { hour, date, user_last_name: userLastName || '' },
     user_name: userName,
     user_phone: userPhone,
   });
 };
 
-export const trackUserCreated = (userName: string, userPhone: string) => {
+export const trackUserCreated = (userName: string, userPhone: string, userLastName?: string) => {
   trackEvent({
     event_type: 'user_created',
-    event_data: {},
+    event_data: { user_last_name: userLastName || '' },
     user_name: userName,
     user_phone: userPhone,
   });

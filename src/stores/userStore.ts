@@ -52,7 +52,7 @@ export const useUserStore = create<UserState>()(
           userId = newUser?.id;
           
           // Track new user creation
-          trackUserCreated(name, phone);
+          trackUserCreated(name, phone, lastName);
         }
 
         // Check if admin
