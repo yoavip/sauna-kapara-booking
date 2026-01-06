@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Sheet,
   SheetContent,
@@ -7,16 +7,23 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, X, Users, Check } from "lucide-react";
+import { Plus, X, Users, Check, User } from "lucide-react";
 
 interface AddParticipantsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (names: string[]) => void;
+  existingRegistrations?: string[];
 }
 
-const AddParticipantsSheet = ({ open, onOpenChange, onConfirm }: AddParticipantsSheetProps) => {
+const AddParticipantsSheet = ({ open, onOpenChange, onConfirm, existingRegistrations = [] }: AddParticipantsSheetProps) => {
   const [names, setNames] = useState<string[]>(['']);
+
+  useEffect(() => {
+    if (open) {
+      setNames(['']);
+    }
+  }, [open]);
 
   const addName = () => {
     setNames([...names, '']);
@@ -78,6 +85,24 @@ const AddParticipantsSheet = ({ open, onOpenChange, onConfirm }: AddParticipants
             </Button>
           </div>
         </SheetHeader>
+        
+        {/* Existing registrations */}
+        {existingRegistrations.length > 0 && (
+          <div className="mb-4 p-3 bg-muted/50 rounded-xl flex-shrink-0">
+            <p className="text-sm text-muted-foreground mb-2">כבר רשומים לשעה זו:</p>
+            <div className="flex flex-wrap gap-2">
+              {existingRegistrations.map((regName, index) => (
+                <div 
+                  key={index}
+                  className="flex items-center gap-1 px-3 py-1 bg-primary/10 border border-primary/30 rounded-full text-sm"
+                >
+                  <User className="w-3 h-3 text-primary" />
+                  <span className="text-foreground">{regName}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         
         <div className="flex-1 overflow-y-auto space-y-4 pb-4">
           {names.map((name, index) => (

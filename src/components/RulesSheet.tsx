@@ -70,10 +70,20 @@ const RulesSheet = ({ open, onOpenChange, onConfirm }: RulesSheetProps) => {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[85vh] flex flex-col">
         <SheetHeader className="mb-4 flex-shrink-0">
-          <SheetTitle className="flex items-center gap-2 text-xl">
-            <ScrollText className="w-5 h-5 text-primary" />
-            חוקים וכללי הסאונה
-          </SheetTitle>
+          <div className="flex items-center justify-between">
+            <SheetTitle className="flex items-center gap-2 text-xl">
+              <ScrollText className="w-5 h-5 text-primary" />
+              חוקים וכללי הסאונה
+            </SheetTitle>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleConfirm}
+              disabled={loading || error || !scrolledToBottom}
+            >
+              מאשר.ת
+            </Button>
+          </div>
         </SheetHeader>
         
         <p className="text-sm text-muted-foreground mb-4 flex-shrink-0">בבקשה לקרוא הכל ואז לאשר</p>
@@ -99,17 +109,6 @@ const RulesSheet = ({ open, onOpenChange, onConfirm }: RulesSheetProps) => {
               {rulesContent}
             </div>
           )}
-        </div>
-
-        <div className="flex-shrink-0 pt-4 border-t border-border">
-          <Button
-            variant="default"
-            size="default"
-            onClick={handleConfirm}
-            disabled={loading || error || !scrolledToBottom}
-          >
-            מאשר.ת
-          </Button>
         </div>
       </SheetContent>
     </Sheet>

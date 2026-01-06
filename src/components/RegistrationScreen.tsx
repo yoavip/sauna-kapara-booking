@@ -496,6 +496,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
         open={showAddParticipants}
         onOpenChange={setShowAddParticipants}
         onConfirm={handleAddParticipantsConfirm}
+        existingRegistrations={pendingHour !== null ? (hourCounts.find(h => h.hour === pendingHour)?.displayNames || []) : []}
       />
 
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
