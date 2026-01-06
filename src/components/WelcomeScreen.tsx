@@ -25,6 +25,9 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
   const [rulesOpened, setRulesOpened] = useState(false);
   const [showRulesSheet, setShowRulesSheet] = useState(false);
   const [isAdminUser, setIsAdminUser] = useState(checkAdminSync());
+  
+  // Validation errors
+  const [errors, setErrors] = useState<{name?: string; lastName?: string; phone?: string; rules?: string}>({});
 
   useEffect(() => {
     trackPageView('welcome', name, phone);
@@ -34,13 +37,35 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
     }
   }, []);
 
-  const handleSaveUser = async () => {
-    if (inputName.trim() && inputPhone.trim()) {
-      await setUser(inputName.trim(), inputLastName.trim(), inputPhone.trim());
-      setShowInputs(false);
-      const adminStatus = await isAdmin();
-      setIsAdminUser(adminStatus);
+  const validateFields = () => {
+    const newErrors: {name?: string; lastName?: string; phone?: string; rules?: string} = {};
+    
+    if (!inputName.trim()) {
+      newErrors.name = 'לא מילאת שם';
     }
+    if (!inputLastName.trim()) {
+      newErrors.lastName = 'לא מילאת שם משפחה';
+    }
+    if (!inputPhone.trim()) {
+      newErrors.phone = 'לא מילאת טלפון';
+    }
+    if (!agreedToRules) {
+      newErrors.rules = 'לא קראת ואישרת את החוקים';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSaveUser = async () => {
+    if (!validateFields()) {
+      return;
+    }
+    
+    await setUser(inputName.trim(), inputLastName.trim(), inputPhone.trim());
+    setShowInputs(false);
+    const adminStatus = await isAdmin();
+    setIsAdminUser(adminStatus);
   };
 
   const handleRegisterClick = async () => {
@@ -100,50 +125,72 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
             {showInputs ? (
               <div className="space-y-4">
                 <p className="text-foreground font-medium mb-4">הזינו את הפרטים שלכם</p>
-                <Input
-                  value={inputName}
-                  onChange={(e) => setInputName(e.target.value)}
-                  placeholder="שם פרטי"
-                  className="h-14 text-base text-center"
-                />
-                <Input
-                  value={inputLastName}
-                  onChange={(e) => setInputLastName(e.target.value)}
-                  placeholder="שם משפחה"
-                  className="h-14 text-base text-center"
-                />
-                <Input
-                  value={inputPhone}
-                  onChange={(e) => setInputPhone(e.target.value)}
-                  placeholder="טלפון"
-                  type="tel"
-                  dir="ltr"
-                  className="h-14 text-base text-center"
-                />
+                <div>
+                  <Input
+                    value={inputName}
+                    onChange={(e) => {
+                      setInputName(e.target.value);
+                      if (errors.name) setErrors(prev => ({ ...prev, name: undefined }));
+                    }}
+                    placeholder="שם פרטי"
+                    className={`h-14 text-base text-center ${errors.name ? 'border-destructive border-2' : ''}`}
+                  />
+                  {errors.name && <p className="text-destructive text-sm mt-1">{errors.name}</p>}
+                </div>
+                <div>
+                  <Input
+                    value={inputLastName}
+                    onChange={(e) => {
+                      setInputLastName(e.target.value);
+                      if (errors.lastName) setErrors(prev => ({ ...prev, lastName: undefined }));
+                    }}
+                    placeholder="שם משפחה"
+                    className={`h-14 text-base text-center ${errors.lastName ? 'border-destructive border-2' : ''}`}
+                  />
+                  {errors.lastName && <p className="text-destructive text-sm mt-1">{errors.lastName}</p>}
+                </div>
+                <div>
+                  <Input
+                    value={inputPhone}
+                    onChange={(e) => {
+                      setInputPhone(e.target.value);
+                      if (errors.phone) setErrors(prev => ({ ...prev, phone: undefined }));
+                    }}
+                    placeholder="טלפון"
+                    type="tel"
+                    dir="ltr"
+                    className={`h-14 text-base text-center ${errors.phone ? 'border-destructive border-2' : ''}`}
+                  />
+                  {errors.phone && <p className="text-destructive text-sm mt-1">{errors.phone}</p>}
+                </div>
                 
                 {/* Rules Agreement */}
-                <div className="flex items-center gap-3 py-2">
-                  <Checkbox
-                    id="rules"
-                    checked={agreedToRules}
-                    disabled={!rulesOpened}
-                    onCheckedChange={(checked) => {
-                      if (!rulesOpened) {
-                        handleOpenRules();
-                      } else {
-                        setAgreedToRules(checked === true);
-                      }
-                    }}
-                  />
-                  <label htmlFor="rules" className="text-sm text-muted-foreground">
-                    <button
-                      type="button"
-                      onClick={handleOpenRules}
-                      className="text-primary hover:underline font-medium"
-                    >
-                      לחצו כאן לקרוא ולאשר והופה לסאונה
-                    </button>
-                  </label>
+                <div>
+                  <div className={`flex items-center gap-3 py-2 px-2 rounded-lg ${errors.rules ? 'border-2 border-destructive' : ''}`}>
+                    <Checkbox
+                      id="rules"
+                      checked={agreedToRules}
+                      disabled={!rulesOpened}
+                      onCheckedChange={(checked) => {
+                        if (!rulesOpened) {
+                          handleOpenRules();
+                        } else {
+                          setAgreedToRules(checked === true);
+                          if (checked) setErrors(prev => ({ ...prev, rules: undefined }));
+                        }
+                      }}
+                    />
+                    <label htmlFor="rules" className="text-sm text-muted-foreground">
+                      <button
+                        type="button"
+                        onClick={handleOpenRules}
+                        className="text-primary hover:underline font-medium"
+                      >
+                        לחצו כאן לקרוא ולאשר והופה לסאונה
+                      </button>
+                    </label>
+                  </div>
+                  {errors.rules && <p className="text-destructive text-sm mt-1">{errors.rules}</p>}
                 </div>
 
                 <Button 
@@ -151,7 +198,6 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
                   variant="warm"
                   size="lg"
                   className="w-full"
-                  disabled={!inputName.trim() || !inputLastName.trim() || !inputPhone.trim() || !agreedToRules}
                 >
                   שמור
                 </Button>

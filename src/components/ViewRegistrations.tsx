@@ -159,8 +159,8 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
   const canCancelRegistration = (reg: Registration) => {
     // Admin can delete anyone
     if (admin) return true;
-    // User can ONLY delete their own registrations (same name AND same phone)
-    return reg.name === name && reg.phone === phone;
+    // User can delete their own registrations OR participants they registered (same phone)
+    return reg.phone === phone;
   };
 
   return (
