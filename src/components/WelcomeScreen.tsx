@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useUserStore } from "@/stores/userStore";
-import { UserPlus, Users, Flame, Shield } from "lucide-react";
+import { UserPlus, Users, Flame, Shield, Check, FileText } from "lucide-react";
 import saunaHero from "@/assets/sauna-hero.jpg";
-import ThermometerBackground from "./ThermometerBackground";
 import RulesSheet from "./RulesSheet";
 import { trackPageView } from "@/lib/analytics";
 
@@ -20,9 +18,8 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
   const [inputName, setInputName] = useState(name);
   const [inputLastName, setInputLastName] = useState(lastName);
   const [inputPhone, setInputPhone] = useState(phone);
-  const [showInputs, setShowInputs] = useState(!isRegistered());
+  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [agreedToRules, setAgreedToRules] = useState(false);
-  const [rulesOpened, setRulesOpened] = useState(false);
   const [showRulesSheet, setShowRulesSheet] = useState(false);
   const [isAdminUser, setIsAdminUser] = useState(checkAdminSync());
   
@@ -50,7 +47,7 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
       newErrors.phone = 'לא מילאת טלפון';
     }
     if (!agreedToRules) {
-      newErrors.rules = 'לא קראת ואישרת את החוקים';
+      newErrors.rules = 'לא קראת ואישרת את התקנון';
     }
     
     setErrors(newErrors);
@@ -63,23 +60,22 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
     }
     
     await setUser(inputName.trim(), inputLastName.trim(), inputPhone.trim());
-    setShowInputs(false);
+    setShowRegistrationForm(false);
     const adminStatus = await isAdmin();
     setIsAdminUser(adminStatus);
   };
 
-  const handleRegisterClick = async () => {
-    if (!isRegistered() && inputName.trim() && inputPhone.trim()) {
-      await setUser(inputName.trim(), inputLastName.trim(), inputPhone.trim());
-    }
-    if (isRegistered() || (inputName.trim() && inputPhone.trim())) {
+  const handleRegisterClick = () => {
+    if (!isRegistered()) {
+      setShowRegistrationForm(true);
+    } else {
       onRegister();
     }
   };
 
   const handleRulesConfirm = () => {
-    setRulesOpened(true);
     setAgreedToRules(true);
+    if (errors.rules) setErrors(prev => ({ ...prev, rules: undefined }));
   };
 
   const handleOpenRules = () => {
@@ -120,11 +116,14 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
             ברוכים הבאים לסאונה הקהילתית
           </p>
           
-          {/* User Info Card */}
-          <div className="bg-card/95 backdrop-blur-md rounded-3xl p-8 shadow-warm mb-6">
-            {showInputs ? (
+          {/* Registration Form - only shown when first-time user clicks register */}
+          {showRegistrationForm && !isRegistered() && (
+            <div className="bg-card/95 backdrop-blur-md rounded-3xl p-8 shadow-warm mb-6">
               <div className="space-y-4">
-                <p className="text-foreground font-medium mb-4">הזינו את הפרטים שלכם</p>
+                <div className="mb-6">
+                  <h2 className="text-xl font-bold text-foreground mb-2">איזה כיף שבאת! 🔥</h2>
+                  <p className="text-muted-foreground text-sm">בשביל להירשם לסאונה, נצטרך ממך כמה פרטים קטנים</p>
+                </div>
                 <div>
                   <Input
                     value={inputName}
@@ -165,32 +164,25 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
                 </div>
                 
                 {/* Rules Agreement */}
-                <div>
-                  <div className={`flex items-center gap-3 py-2 px-2 rounded-lg ${errors.rules ? 'border-2 border-destructive' : ''}`}>
-                    <Checkbox
-                      id="rules"
-                      checked={agreedToRules}
-                      onCheckedChange={(checked) => {
-                        if (!rulesOpened) {
-                          handleOpenRules();
-                        } else {
-                          setAgreedToRules(checked === true);
-                          if (checked) setErrors(prev => ({ ...prev, rules: undefined }));
-                        }
-                      }}
-                    />
-                    <label htmlFor="rules" className="text-sm text-muted-foreground">
-                      <button
-                        type="button"
-                        onClick={handleOpenRules}
-                        className="text-primary hover:underline font-medium"
-                      >
-                        לחצו כאן לקרוא ולאשר והופה לסאונה
-                      </button>
-                    </label>
-                  </div>
-                  {errors.rules && <p className="text-destructive text-sm mt-1">{errors.rules}</p>}
+                <div className={`${errors.rules ? 'border-2 border-destructive rounded-lg' : ''}`}>
+                  {!agreedToRules ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleOpenRules}
+                      className="w-full h-14 gap-2"
+                    >
+                      <FileText className="w-5 h-5" />
+                      לקריאה ואישור התקנון
+                    </Button>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2 py-4 px-4 bg-primary/10 rounded-lg">
+                      <Check className="w-5 h-5 text-primary" />
+                      <span className="text-primary font-medium">התקנון אושר</span>
+                    </div>
+                  )}
                 </div>
+                {errors.rules && <p className="text-destructive text-sm">{errors.rules}</p>}
 
                 <Button 
                   onClick={handleSaveUser}
@@ -198,23 +190,31 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
                   size="lg"
                   className="w-full"
                 >
-                  שמור
+                  שמור והמשך
                 </Button>
               </div>
-            ) : (
+            </div>
+          )}
+          
+          {/* User Info Card - shown when registered */}
+          {isRegistered() && (
+            <div className="bg-card/95 backdrop-blur-md rounded-3xl p-8 shadow-warm mb-6">
               <div>
                 <p className="text-muted-foreground text-sm mb-2">שלום,</p>
                 <p className="text-2xl font-bold text-foreground mb-1">{name}</p>
                 <p className="text-muted-foreground text-sm mb-4" dir="ltr">{phone}</p>
                 <button 
-                  onClick={() => setShowInputs(true)}
+                  onClick={() => {
+                    setShowRegistrationForm(true);
+                    setAgreedToRules(true); // Already agreed before
+                  }}
                   className="text-primary text-sm hover:underline"
                 >
                   לא אני? לחצו כאן
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
           
           {/* Action Buttons */}
           <div className="flex flex-col gap-4">
@@ -223,10 +223,9 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
               size="xl" 
               className="w-full"
               onClick={handleRegisterClick}
-              disabled={!inputName.trim() && !isRegistered()}
             >
               <UserPlus className="w-5 h-5 ml-2" />
-              תרשום אותי
+              {isRegistered() ? 'תרשום אותי' : 'הרשמה'}
             </Button>
             <Button 
               variant="outline" 
