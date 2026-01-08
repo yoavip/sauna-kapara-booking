@@ -116,13 +116,17 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
             ברוכים הבאים לסאונה הקהילתית
           </p>
           
-          {/* Registration Form - only shown when first-time user clicks register */}
-          {showRegistrationForm && !isRegistered() && (
+          {/* Registration Form - shown for first-time users or when editing */}
+          {showRegistrationForm && (
             <div className="bg-card/95 backdrop-blur-md rounded-3xl p-8 shadow-warm mb-6">
               <div className="space-y-4">
                 <div className="mb-6">
-                  <h2 className="text-xl font-bold text-foreground mb-2">איזה כיף שבאת! 🔥</h2>
-                  <p className="text-muted-foreground text-sm">בשביל להירשם לסאונה, נצטרך ממך כמה פרטים קטנים</p>
+                  <h2 className="text-xl font-bold text-foreground mb-2">
+                    {isRegistered() ? 'עדכון פרטים' : 'איזה כיף שבאת! 🔥'}
+                  </h2>
+                  <p className="text-muted-foreground text-sm">
+                    {isRegistered() ? 'ניתן לעדכן את הפרטים שלך' : 'בשביל להירשם לסאונה, נצטרך ממך כמה פרטים קטנים'}
+                  </p>
                 </div>
                 <div>
                   <Input
@@ -196,21 +200,24 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
             </div>
           )}
           
-          {/* User Info Card - shown when registered */}
-          {isRegistered() && (
+          {/* User Info Card - shown when registered and not editing */}
+          {isRegistered() && !showRegistrationForm && (
             <div className="bg-card/95 backdrop-blur-md rounded-3xl p-8 shadow-warm mb-6">
               <div>
                 <p className="text-muted-foreground text-sm mb-2">שלום,</p>
-                <p className="text-2xl font-bold text-foreground mb-1">{name}</p>
+                <p className="text-2xl font-bold text-foreground mb-1">{name} {lastName}</p>
                 <p className="text-muted-foreground text-sm mb-4" dir="ltr">{phone}</p>
                 <button 
                   onClick={() => {
+                    setInputName(name);
+                    setInputLastName(lastName);
+                    setInputPhone(phone);
                     setShowRegistrationForm(true);
                     setAgreedToRules(true); // Already agreed before
                   }}
                   className="text-primary text-sm hover:underline"
                 >
-                  לא אני? לחצו כאן
+                  שינוי פרטים
                 </button>
               </div>
             </div>
