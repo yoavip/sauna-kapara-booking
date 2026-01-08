@@ -105,7 +105,7 @@ const RulesSheet = ({ open, onOpenChange, onConfirm }: RulesSheetProps) => {
               </Button>
             </div>
           ) : (
-            <div className="bg-muted/30 rounded-xl p-6 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+            <div className="bg-muted/30 rounded-xl p-6 whitespace-pre-wrap text-base leading-relaxed text-foreground">
               {rulesContent}
             </div>
           )}
