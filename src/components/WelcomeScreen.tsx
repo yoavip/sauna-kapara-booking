@@ -14,7 +14,7 @@ interface WelcomeScreenProps {
 }
 
 const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: WelcomeScreenProps) => {
-  const { name, lastName, phone, setUser, isRegistered, checkAdminSync, isAdmin } = useUserStore();
+  const { name, lastName, phone, setUser, clearUser, isRegistered, checkAdminSync, isAdmin } = useUserStore();
   const [inputName, setInputName] = useState(name);
   const [inputLastName, setInputLastName] = useState(lastName);
   const [inputPhone, setInputPhone] = useState(phone);
@@ -207,18 +207,34 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
                 <p className="text-muted-foreground text-sm mb-2">שלום,</p>
                 <p className="text-2xl font-bold text-foreground mb-1">{name} {lastName}</p>
                 <p className="text-muted-foreground text-sm mb-4" dir="ltr">{phone}</p>
-                <button 
-                  onClick={() => {
-                    setInputName(name);
-                    setInputLastName(lastName);
-                    setInputPhone(phone);
-                    setShowRegistrationForm(true);
-                    setAgreedToRules(true); // Already agreed before
-                  }}
-                  className="text-primary text-sm hover:underline"
-                >
-                  שינוי פרטים
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button 
+                    onClick={() => {
+                      setInputName(name);
+                      setInputLastName(lastName);
+                      setInputPhone(phone);
+                      setShowRegistrationForm(true);
+                      setAgreedToRules(true); // Already agreed before
+                    }}
+                    className="text-primary text-sm hover:underline"
+                  >
+                    שינוי פרטים
+                  </button>
+                  <button 
+                    onClick={() => {
+                      clearUser();
+                      setInputName('');
+                      setInputLastName('');
+                      setInputPhone('');
+                      setAgreedToRules(false);
+                      setShowRegistrationForm(false);
+                      setIsAdminUser(false);
+                    }}
+                    className="text-muted-foreground text-xs hover:underline"
+                  >
+                    לא אני? לחצו כאן
+                  </button>
+                </div>
               </div>
             </div>
           )}
