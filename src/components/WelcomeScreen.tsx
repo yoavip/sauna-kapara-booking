@@ -125,7 +125,7 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
                     {isRegistered() ? 'עדכון פרטים' : 'איזה כיף שבאת! 🔥'}
                   </h2>
                   <p className="text-muted-foreground text-sm">
-                    {isRegistered() ? 'ניתן לעדכן את הפרטים שלך' : 'בשביל להירשם לסאונה, נצטרך ממך כמה פרטים קטנים'}
+                    {isRegistered() ? 'ניתן לעדכן את הפרטים שלך' : 'בשביל להירשם לסאונה, נצטרך ממך כמה פרטים'}
                   </p>
                 </div>
                 <div>
