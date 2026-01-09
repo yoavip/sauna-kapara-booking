@@ -11,15 +11,17 @@ const ReportBugButton = () => {
   };
 
   return (
-    <Button
-      onClick={handleClick}
-      variant="outline"
-      size="sm"
-      className="fixed bottom-4 left-4 z-50 gap-2 bg-background/90 backdrop-blur-sm border-amber-500/50 text-amber-600 hover:bg-amber-50 hover:text-amber-700 shadow-lg"
-    >
-      <MessageCircle className="w-4 h-4" />
-      <span className="text-xs">האתר בהרצה - דווח על בעיה</span>
-    </Button>
+    <div className="fixed bottom-4 left-4 z-[9999]">
+      <Button
+        onClick={handleClick}
+        variant="outline"
+        size="sm"
+        className="gap-2 bg-amber-100 backdrop-blur-sm border-amber-500 text-amber-700 hover:bg-amber-200 hover:text-amber-800 shadow-lg"
+      >
+        <MessageCircle className="w-4 h-4" />
+        <span className="text-xs">האתר בהרצה - דווח על בעיה</span>
+      </Button>
+    </div>
   );
 };
 
