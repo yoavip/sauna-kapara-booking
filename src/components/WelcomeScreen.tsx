@@ -234,7 +234,7 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
               onClick={handleRegisterClick}
             >
               <UserPlus className="w-5 h-5 ml-2" />
-              {isRegistered() ? 'תרשום אותי' : 'הרשמה'}
+              {isRegistered() ? 'תרשום אותי' : 'נעים מאוד'}
             </Button>
             <Button 
               variant="outline" 
