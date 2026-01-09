@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Shield, Users, Download, FileText, Activity } from "lucide-react";
+import { ArrowRight, Shield, Users, Download, FileText, Activity, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -10,6 +10,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import ThermometerBackground from "./ThermometerBackground";
 import { format } from "date-fns";
@@ -24,6 +34,7 @@ interface UserWithStats {
   id: string;
   name: string;
   last_name: string | null;
+  display_name: string | null;
   phone: string;
   created_at: string;
   registrationCount: number;
@@ -34,6 +45,7 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
   const { name, phone } = useUserStore();
   const [users, setUsers] = useState<UserWithStats[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userToDelete, setUserToDelete] = useState<UserWithStats | null>(null);
 
   useEffect(() => {
     trackPageView('admin_management', name, phone);
@@ -150,10 +162,11 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
     });
 
     const csvContent = [
-      ['שם', 'שם משפחה', 'טלפון', 'מספר הרשמות', 'תאריך הצטרפות', 'נראה לאחרונה'].join(','),
+      ['שם', 'שם משפחה', 'שם תצוגה', 'טלפון', 'מספר הרשמות', 'תאריך הצטרפות', 'נראה לאחרונה'].join(','),
       ...usersData.map(u => [
         u.name,
         u.last_name || '',
+        u.display_name || '',
         u.phone,
         regCounts[u.phone] || 0,
         format(new Date(u.created_at), 'dd/MM/yyyy'),
@@ -253,6 +266,46 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
     URL.revokeObjectURL(url);
   };
 
+  const handleDeleteUser = async (user: UserWithStats) => {
+    // Delete all registrations by this user's phone (includes their guests)
+    const { error: regError } = await supabase
+      .from('registrations')
+      .delete()
+      .eq('phone', user.phone);
+
+    if (regError) {
+      console.error('Error deleting registrations:', regError);
+      toast.error('שגיאה במחיקת הרשמות');
+      return;
+    }
+
+    // Delete user roles
+    const { error: rolesError } = await supabase
+      .from('user_roles')
+      .delete()
+      .eq('user_id', user.id);
+
+    if (rolesError) {
+      console.error('Error deleting user roles:', rolesError);
+    }
+
+    // Delete the user
+    const { error: userError } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', user.id);
+
+    if (userError) {
+      console.error('Error deleting user:', userError);
+      toast.error('שגיאה במחיקת משתמש');
+      return;
+    }
+
+    toast.success(`המשתמש ${user.name} נמחק בהצלחה`);
+    setUserToDelete(null);
+    fetchUsers();
+  };
+
   return (
     <div className="min-h-screen bg-background relative">
       <ThermometerBackground />
@@ -307,8 +360,10 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
                 <TableRow>
                   <TableHead className="text-right">שם</TableHead>
                   <TableHead className="text-right">שם משפחה</TableHead>
+                  <TableHead className="text-right">שם תצוגה</TableHead>
                   <TableHead className="text-right">תאריך הצטרפות</TableHead>
                   <TableHead className="text-right">מספר הרשמות</TableHead>
+                  <TableHead className="text-right w-16">פעולות</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -316,8 +371,19 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.last_name || '-'}</TableCell>
+                    <TableCell>{user.display_name || '-'}</TableCell>
                     <TableCell>{format(new Date(user.created_at), 'dd/MM/yyyy')}</TableCell>
                     <TableCell>{user.registrationCount}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                        onClick={() => setUserToDelete(user)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -325,6 +391,29 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
           )}
         </div>
       </main>
+
+      {/* Delete User Confirmation Dialog */}
+      <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-right">מחיקת משתמש</AlertDialogTitle>
+            <AlertDialogDescription className="text-right">
+              האם למחוק את המשתמש {userToDelete?.name} {userToDelete?.last_name || ''}?
+              <br />
+              פעולה זו תמחק גם את כל ההרשמות של המשתמש ({userToDelete?.registrationCount} הרשמות).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2">
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => userToDelete && handleDeleteUser(userToDelete)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              מחק משתמש
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
