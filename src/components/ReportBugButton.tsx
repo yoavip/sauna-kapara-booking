@@ -19,7 +19,7 @@ const ReportBugButton = () => {
         className="gap-2 bg-amber-100 backdrop-blur-sm border-amber-500 text-amber-700 hover:bg-amber-200 hover:text-amber-800 shadow-lg"
       >
         <MessageCircle className="w-4 h-4" />
-        <span className="text-xs">האתר בהרצה - דווח על בעיה</span>
+        <span className="text-xs">בוא נשמע אותך</span>
       </Button>
     </div>
   );
