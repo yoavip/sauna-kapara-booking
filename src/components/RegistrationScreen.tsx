@@ -99,32 +99,43 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
 
     // Count per hour
     const counts: Record<number, number> = {};
-    const namesByHour: Record<number, string[]> = {};
+    const registrationsByHour: Record<number, {name: string, phone: string}[]> = {};
     const myRegs: MyRegistration[] = [];
     
     data?.forEach(reg => {
       counts[reg.hour] = (counts[reg.hour] || 0) + 1;
-      if (!namesByHour[reg.hour]) namesByHour[reg.hour] = [];
+      if (!registrationsByHour[reg.hour]) registrationsByHour[reg.hour] = [];
       
-      // Collect names for each hour
-      namesByHour[reg.hour].push(reg.name);
+      // Collect name AND phone for each hour to properly identify users
+      registrationsByHour[reg.hour].push({ name: reg.name, phone: reg.phone });
       
       if (reg.name === name && reg.phone === phone) {
         myRegs.push({ id: reg.id, hour: reg.hour });
       }
     });
 
-    // Import and get display names for popover
-    const { getDisplayNamesForParticipants } = await import('@/lib/displayName');
+    // Get all unique phones for lookup
+    const allPhones = [...new Set(data?.map(r => r.phone) || [])];
+    const { data: allUsers } = await supabase
+      .from('users')
+      .select('name, phone, display_name')
+      .in('phone', allPhones);
     
-    // Build hourCounts with proper display names
-    const hourCountsPromises = hours.map(async (h) => {
-      const names = namesByHour[h] || [];
-      const displayNames = names.length > 0 ? await getDisplayNamesForParticipants(names) : [];
+    // Create a map from phone+name to display_name for precise matching
+    const phoneNameToDisplayName = new Map<string, string>();
+    allUsers?.forEach(u => {
+      phoneNameToDisplayName.set(`${u.phone}|${u.name}`, u.display_name || u.name);
+    });
+    
+    // Build hourCounts with proper display names using phone for identification
+    const resolvedHourCounts = hours.map((h) => {
+      const regs = registrationsByHour[h] || [];
+      const displayNames = regs.map(r => 
+        phoneNameToDisplayName.get(`${r.phone}|${r.name}`) || r.name
+      );
       return { hour: h, count: counts[h] || 0, displayNames };
     });
 
-    const resolvedHourCounts = await Promise.all(hourCountsPromises);
     setHourCounts(resolvedHourCounts);
     setMyRegistrations(myRegs);
   };
