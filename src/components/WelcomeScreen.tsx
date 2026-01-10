@@ -103,16 +103,16 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
       <div className="relative z-10 container mx-auto px-4 text-center">
         <div className="animate-fade-up max-w-md mx-auto">
           {/* Logo */}
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <div className="w-16 h-16 rounded-full bg-golden flex items-center justify-center shadow-glow">
-              <Flame className="w-8 h-8 text-foreground" />
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-full bg-golden flex items-center justify-center shadow-glow">
+              <Flame className="w-6 h-6 text-foreground" />
             </div>
           </div>
           
-          <h1 className="text-4xl md:text-5xl font-bold text-steam mb-4">
+          <h1 className="text-3xl md:text-4xl font-bold text-steam mb-2">
             סאונה בית קשת
           </h1>
-          <p className="text-lg text-steam/80 mb-10">
+          <p className="text-base text-steam/80 mb-6">
             ברוכים הבאים לסאונה הקהילתית
           </p>
           
@@ -202,11 +202,11 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
           
           {/* User Info Card - shown when registered and not editing */}
           {isRegistered() && !showRegistrationForm && (
-            <div className="bg-card/95 backdrop-blur-md rounded-3xl p-8 shadow-warm mb-6">
+            <div className="bg-card/95 backdrop-blur-md rounded-2xl p-5 shadow-warm mb-4">
               <div>
-                <p className="text-muted-foreground text-sm mb-2">שלום,</p>
-                <p className="text-2xl font-bold text-foreground mb-1">{name} {lastName}</p>
-                <p className="text-muted-foreground text-sm mb-4" dir="ltr">{phone}</p>
+                <p className="text-muted-foreground text-xs mb-1">שלום,</p>
+                <p className="text-xl font-bold text-foreground mb-0.5">{name} {lastName}</p>
+                <p className="text-muted-foreground text-xs mb-2" dir="ltr">{phone}</p>
                 <button
                   onClick={() => {
                     clearUser();
@@ -226,10 +226,10 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
           )}
           
           {/* Action Buttons */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             <Button 
               variant="hero" 
-              size="xl" 
+              size="lg" 
               className="w-full"
               onClick={handleRegisterClick}
             >
@@ -238,7 +238,7 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
             </Button>
             <Button 
               variant="outline" 
-              size="xl" 
+              size="lg" 
               className="w-full border-steam/30 text-steam hover:bg-steam/10 hover:text-steam"
               onClick={onViewRegistrations}
             >
@@ -250,7 +250,7 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
             {isAdminUser && (
               <Button 
                 variant="outline" 
-                size="xl" 
+                size="lg" 
                 className="w-full border-primary/50 text-primary hover:bg-primary/10"
                 onClick={onAdminUsers}
               >
