@@ -7,7 +7,7 @@ import { useUserStore } from "@/stores/userStore";
 import { toast } from "sonner";
 import { trackPageView, trackCancellation } from "@/lib/analytics";
 import ThermometerBackground from "./ThermometerBackground";
-import { getDisplayNamesForParticipants } from "@/lib/displayName";
+
 
 
 interface ViewRegistrationsProps {
@@ -62,19 +62,29 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
       return;
     }
 
-    // Get display names for all participants
-    const participantNames = data?.map(r => r.name) || [];
-    const displayNames = await getDisplayNamesForParticipants(participantNames);
+    // Get all unique phones for display name lookup
+    const allPhones = [...new Set(data?.map(r => r.phone) || [])];
+    const { data: allUsers } = await supabase
+      .from('users')
+      .select('name, phone, display_name')
+      .in('phone', allPhones);
+    
+    // Create a map from phone+name to display_name for precise matching
+    const phoneNameToDisplayName = new Map<string, string>();
+    allUsers?.forEach(u => {
+      phoneNameToDisplayName.set(`${u.phone}|${u.name}`, u.display_name || u.name);
+    });
 
     // Group by hour - only include hours with registrations
     const groups: Record<number, Registration[]> = {};
     
-    data?.forEach((reg, index) => {
+    data?.forEach((reg) => {
       if (!groups[reg.hour]) {
         groups[reg.hour] = [];
       }
-      // Use display name from the lookup
-      groups[reg.hour].push({ ...reg, displayName: displayNames[index] || reg.name });
+      // Use display name from the lookup by phone+name
+      const displayName = phoneNameToDisplayName.get(`${reg.phone}|${reg.name}`) || reg.name;
+      groups[reg.hour].push({ ...reg, displayName });
     });
 
     // Create ordered array - only hours with registrations
