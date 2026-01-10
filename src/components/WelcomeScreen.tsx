@@ -109,10 +109,10 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
             </div>
           </div>
           
-          <h1 className="text-3xl md:text-4xl font-bold text-steam mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-steam mb-2">
             סאונה בית קשת
           </h1>
-          <p className="text-base text-steam/80 mb-6">
+          <p className="text-sm text-steam/80 mb-5">
             ברוכים הבאים לסאונה הקהילתית
           </p>
           
@@ -202,11 +202,11 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
           
           {/* User Info Card - shown when registered and not editing */}
           {isRegistered() && !showRegistrationForm && (
-            <div className="bg-card/95 backdrop-blur-md rounded-2xl p-5 shadow-warm mb-4">
+            <div className="bg-card/95 backdrop-blur-md rounded-xl p-4 shadow-warm mb-4">
               <div>
-                <p className="text-muted-foreground text-xs mb-1">שלום,</p>
-                <p className="text-xl font-bold text-foreground mb-0.5">{name} {lastName}</p>
-                <p className="text-muted-foreground text-xs mb-2" dir="ltr">{phone}</p>
+                <p className="text-muted-foreground text-xs">שלום,</p>
+                <p className="text-lg font-bold text-foreground">{name} {lastName}</p>
+                <p className="text-muted-foreground text-xs mb-1" dir="ltr">{phone}</p>
                 <button
                   onClick={() => {
                     clearUser();
