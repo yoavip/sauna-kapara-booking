@@ -104,9 +104,16 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
         <div className="animate-fade-up max-w-md mx-auto">
           {/* Logo */}
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full bg-golden flex items-center justify-center shadow-glow">
+            <button
+              onClick={() => {
+                const phone = "972526606479";
+                const message = "אש אש יא גולש";
+                window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+              }}
+              className="w-12 h-12 rounded-full bg-golden flex items-center justify-center shadow-glow cursor-pointer hover:scale-110 transition-transform"
+            >
               <Flame className="w-6 h-6 text-foreground" />
-            </div>
+            </button>
           </div>
           
           <h1 className="text-2xl md:text-3xl font-bold text-steam mb-2">
