@@ -204,9 +204,9 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
           {isRegistered() && !showRegistrationForm && (
             <div className="bg-card/95 backdrop-blur-md rounded-xl p-4 shadow-warm mb-4">
               <div>
-                <p className="text-muted-foreground text-xs">שלום,</p>
-                <p className="text-lg font-bold text-foreground">{name} {lastName}</p>
-                <p className="text-muted-foreground text-xs mb-1" dir="ltr">{phone}</p>
+                <p className="text-muted-foreground text-xs">שלום</p>
+                <p className="text-xl font-bold text-foreground">{name}</p>
+                <p className="text-muted-foreground text-sm mb-1" dir="ltr">{phone}</p>
                 <button
                   onClick={() => {
                     clearUser();
@@ -258,6 +258,26 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
                 ניהול משתמשים
               </Button>
             )}
+            
+            {/* Bottom Links */}
+            <div className="flex gap-2 mt-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex-1 text-steam/70 hover:text-steam hover:bg-steam/10"
+                onClick={() => window.open('https://docs.google.com/document/d/1GTYyJSkrMjytvsKmBpEkYS8UJDZA0P8E4igQM1KFW1Y/edit?tab=t.0', '_blank')}
+              >
+                📜 כללי הזהב
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex-1 text-steam/70 hover:text-steam hover:bg-steam/10"
+                onClick={() => window.open('https://docs.google.com/document/d/1MQXFUKRoH-V2Y8-67YF82s2xefNwl0bu8Tr19oaQGvA/edit?usp=drivesdk', '_blank')}
+              >
+                ⚙️ הוראות תפעול 🔧
+              </Button>
+            </div>
           </div>
         </div>
       </div>

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 
 const ReportBugButton = () => {
   const developerPhone = "972526606479";
-  const message = "שלום לך יואב תודה על האתר החמוד והמושקע, שיחקת אותה!\nרק יש כמה דברים שלא עובדים, או יותר נכון חשבתי שיש מה לשפר, אז קבל:";
+  const message = "שלום לך יואב תודה על האתר החמוד והמושקע, שיחקת אותה!\nרק יש כמה דברים שלא עובדים, או יותר נכון חשבתי שיש מה לשפר, אז קבל:\n(אפשר גם הודעה קולית, בכיף)";
   
   const handleClick = () => {
     const whatsappUrl = `https://wa.me/${developerPhone}?text=${encodeURIComponent(message)}`;
