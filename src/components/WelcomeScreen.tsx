@@ -11,9 +11,10 @@ interface WelcomeScreenProps {
   onRegister: () => void;
   onViewRegistrations: () => void;
   onAdminUsers: () => void;
+  onSnooker: () => void;
 }
 
-const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: WelcomeScreenProps) => {
+const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers, onSnooker }: WelcomeScreenProps) => {
   const { name, lastName, phone, setUser, clearUser, isRegistered, checkAdminSync, isAdmin } = useUserStore();
   const [inputName, setInputName] = useState(name);
   const [inputLastName, setInputLastName] = useState(lastName);
@@ -105,11 +106,7 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers }: Welcom
           {/* Logo */}
           <div className="flex items-center justify-center gap-3 mb-4">
             <button
-              onClick={() => {
-                const phone = "972526606479";
-                const message = "אש אש יא גולש";
-                window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
-              }}
+              onClick={onSnooker}
               className="w-12 h-12 rounded-full bg-golden flex items-center justify-center shadow-glow cursor-pointer hover:scale-110 transition-transform"
             >
               <Flame className="w-6 h-6 text-foreground" />
