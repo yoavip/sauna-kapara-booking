@@ -112,10 +112,23 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
       return;
     }
 
+    // Fetch users to get last names by phone
+    const { data: usersData } = await supabase
+      .from('users')
+      .select('phone, last_name');
+
+    const lastNameByPhone: Record<string, string> = {};
+    usersData?.forEach(u => {
+      if (u.last_name) {
+        lastNameByPhone[u.phone] = u.last_name;
+      }
+    });
+
     const csvContent = [
-      ['שם', 'טלפון', 'שעה מוזמנת', 'תאריך מוזמן', 'זמן ביצוע הרשמה'].join(','),
+      ['שם', 'שם משפחה', 'טלפון', 'שעה מוזמנת', 'תאריך מוזמן', 'זמן ביצוא הרשמה'].join(','),
       ...data.map(r => [
         r.name,
+        lastNameByPhone[r.phone] || '',
         r.phone,
         `${r.hour}:00`,
         format(new Date(r.registered_at), 'dd/MM/yyyy'),
@@ -213,6 +226,11 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
         const parts = [];
         if (eventData.date) parts.push(`תאריך: ${eventData.date}`);
         if (eventData.hour !== undefined) parts.push(`שעה: ${eventData.hour}:00`);
+        // Add registered user's name from event
+        if (event.user_name) {
+          const lastName = eventData.user_last_name as string || '';
+          parts.push(`נרשם: ${event.user_name}${lastName ? ' ' + lastName : ''}`);
+        }
         if (eventData.additional_participants && Number(eventData.additional_participants) > 0) {
           parts.push(`משתתפים נוספים: ${eventData.additional_participants}`);
         }
@@ -226,6 +244,11 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
         const parts = [];
         if (eventData.date) parts.push(`תאריך: ${eventData.date}`);
         if (eventData.hour !== undefined) parts.push(`שעה: ${eventData.hour}:00`);
+        // Add cancelled user's name from event
+        if (event.user_name) {
+          const lastName = eventData.user_last_name as string || '';
+          parts.push(`בוטל: ${event.user_name}${lastName ? ' ' + lastName : ''}`);
+        }
         return parts.join(' | ');
       }
       
