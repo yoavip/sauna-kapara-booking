@@ -32,7 +32,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "Lovable <onboarding@resend.dev>",
-      to: ["dzvip@yaad.co.il"],
+      to: ["pinsky.tzvi@gmail.com"],
       subject: `פנייה חדשה מ-${firstName} ${lastName}`,
       html: `
         <div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px;">
