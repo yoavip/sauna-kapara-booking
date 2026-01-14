@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail, MapPin, MessageCircle } from "lucide-react";
 import galileeImage from "@/assets/galilee-landscape.jpg";
 
 const TourGuide = () => {
@@ -212,6 +212,23 @@ const TourGuide = () => {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* WhatsApp Button */}
+        <div className="fixed bottom-4 left-4 z-[9999]">
+          <Button
+            onClick={() => {
+              const phone = "972526606479";
+              const message = "צבי שמעתי על הטיולים המרתקים שלך ורציתי...";
+              window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+            }}
+            variant="outline"
+            size="sm"
+            className="gap-2 bg-green-100 backdrop-blur-sm border-green-500 text-green-700 hover:bg-green-200 hover:text-green-800 shadow-lg"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span className="text-xs">כתוב לצבי</span>
+          </Button>
+        </div>
       </div>
     </div>
   );
