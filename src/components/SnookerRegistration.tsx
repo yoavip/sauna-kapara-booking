@@ -125,7 +125,7 @@ const SnookerRegistration = ({ onBack }: SnookerRegistrationProps) => {
     const hours = getHours();
 
     const { data, error } = await supabase
-      .from('registrations')
+      .from('snooker_registrations')
       .select('id, hour, name, phone')
       .gte('registered_at', dayStart.toISOString())
       .lt('registered_at', dayEnd.toISOString());
@@ -199,7 +199,7 @@ const SnookerRegistration = ({ onBack }: SnookerRegistrationProps) => {
         {
           event: '*',
           schema: 'public',
-          table: 'registrations'
+          table: 'snooker_registrations'
         },
         () => {
           fetchRegistrations();
@@ -249,7 +249,7 @@ const SnookerRegistration = ({ onBack }: SnookerRegistrationProps) => {
     }
 
     const { error } = await supabase
-      .from('registrations')
+      .from('snooker_registrations')
       .insert(registrations);
 
     if (error) {
@@ -273,7 +273,7 @@ const SnookerRegistration = ({ onBack }: SnookerRegistrationProps) => {
     const dayEnd = addDays(dayStart, 1);
     
     const { data: otherParticipants } = await supabase
-      .from('registrations')
+      .from('snooker_registrations')
       .select('id, name')
       .eq('phone', phone)
       .eq('hour', hour)
@@ -298,7 +298,7 @@ const SnookerRegistration = ({ onBack }: SnookerRegistrationProps) => {
     if (includeParticipants && pendingParticipants.length > 0) {
       const allIds = [regId, ...pendingParticipants.map(p => p.id)];
       const { error } = await supabase
-        .from('registrations')
+        .from('snooker_registrations')
         .delete()
         .in('id', allIds);
 
@@ -311,7 +311,7 @@ const SnookerRegistration = ({ onBack }: SnookerRegistrationProps) => {
       }
     } else {
       const { error } = await supabase
-        .from('registrations')
+        .from('snooker_registrations')
         .delete()
         .eq('id', regId);
 
