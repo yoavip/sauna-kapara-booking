@@ -68,6 +68,33 @@ export type Database = {
         }
         Relationships: []
       }
+      snooker_registrations: {
+        Row: {
+          created_at: string
+          hour: number
+          id: string
+          name: string
+          phone: string
+          registered_at: string
+        }
+        Insert: {
+          created_at?: string
+          hour: number
+          id?: string
+          name: string
+          phone: string
+          registered_at?: string
+        }
+        Update: {
+          created_at?: string
+          hour?: number
+          id?: string
+          name?: string
+          phone?: string
+          registered_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
