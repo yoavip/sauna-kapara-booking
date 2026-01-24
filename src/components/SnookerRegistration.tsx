@@ -376,7 +376,9 @@ const SnookerRegistration = ({ onBack }: SnookerRegistrationProps) => {
   // If user not registered in the system
   if (!isUserRegistered()) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-emerald-950 via-green-900 to-emerald-950 relative">
+      <div className="min-h-screen relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #0c2418 0%, #0a3d24 25%, #0d4a2c 50%, #0a3d24 75%, #0c2418 100%)' }}>
+        {/* Felt texture overlay */}
+        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }} />
         <BilliardBalls />
         <SmokeEffect />
         
@@ -414,7 +416,9 @@ const SnookerRegistration = ({ onBack }: SnookerRegistrationProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-950 via-green-900 to-emerald-950 relative">
+    <div className="min-h-screen relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #0c2418 0%, #0a3d24 25%, #0d4a2c 50%, #0a3d24 75%, #0c2418 100%)' }}>
+      {/* Felt texture overlay */}
+      <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }} />
       <BilliardBalls />
       <SmokeEffect />
       
