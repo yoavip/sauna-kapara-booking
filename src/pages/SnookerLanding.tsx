@@ -2,39 +2,82 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { FileText, ArrowLeft } from "lucide-react";
 
-// Billiard ball colors for decoration
+// Billiard ball component with rolling animation
+const BilliardBall = ({ 
+  number, 
+  color, 
+  textColor = "white",
+  size,
+  initialX,
+  initialY,
+  duration,
+  delay = 0
+}: {
+  number: number;
+  color: string;
+  textColor?: string;
+  size: number;
+  initialX: string;
+  initialY: string;
+  duration: number;
+  delay?: number;
+}) => (
+  <div 
+    className="absolute rounded-full shadow-lg"
+    style={{
+      width: size,
+      height: size,
+      left: initialX,
+      top: initialY,
+      background: color,
+      animation: `roll-${number} ${duration}s linear ${delay}s infinite`,
+    }}
+  >
+    <span 
+      className="absolute inset-0 flex items-center justify-center font-bold"
+      style={{ 
+        color: textColor, 
+        fontSize: size * 0.35,
+        animation: `spin ${duration * 0.8}s linear ${delay}s infinite`
+      }}
+    >
+      {number}
+    </span>
+  </div>
+);
+
+// Billiard balls container with animations
 const BilliardBalls = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none">
     {/* Smoke effect */}
     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
     
-    {/* Floating balls */}
-    <div className="absolute top-[10%] left-[5%] w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-lg opacity-60 animate-pulse" style={{ animationDelay: '0s' }}>
-      <span className="absolute inset-0 flex items-center justify-center text-black font-bold text-sm">1</span>
-    </div>
-    <div className="absolute top-[20%] right-[8%] w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg opacity-50" style={{ animationDelay: '0.5s' }}>
-      <span className="absolute inset-0 flex items-center justify-center text-white font-bold text-xs">2</span>
-    </div>
-    <div className="absolute top-[45%] left-[3%] w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-red-700 shadow-lg opacity-40">
-      <span className="absolute inset-0 flex items-center justify-center text-white font-bold text-xs">3</span>
-    </div>
-    <div className="absolute top-[65%] right-[5%] w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-purple-800 shadow-lg opacity-30">
-      <span className="absolute inset-0 flex items-center justify-center text-white font-bold text-sm">4</span>
-    </div>
-    <div className="absolute bottom-[25%] left-[8%] w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg opacity-40">
-      <span className="absolute inset-0 flex items-center justify-center text-black font-bold text-xs">5</span>
-    </div>
-    <div className="absolute top-[35%] right-[3%] w-6 h-6 rounded-full bg-gradient-to-br from-green-600 to-green-800 shadow-lg opacity-50">
-      <span className="absolute inset-0 flex items-center justify-center text-white font-bold text-[10px]">6</span>
-    </div>
-    <div className="absolute bottom-[40%] right-[10%] w-9 h-9 rounded-full bg-gradient-to-br from-amber-700 to-amber-900 shadow-lg opacity-35">
-      <span className="absolute inset-0 flex items-center justify-center text-white font-bold text-xs">7</span>
-    </div>
+    {/* Rolling balls with unique animations */}
+    <BilliardBall number={1} color="linear-gradient(135deg, #fbbf24 0%, #d97706 100%)" textColor="black" size={48} initialX="5%" initialY="10%" duration={25} delay={0} />
+    <BilliardBall number={2} color="linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)" textColor="white" size={40} initialX="92%" initialY="20%" duration={30} delay={2} />
+    <BilliardBall number={3} color="linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)" textColor="white" size={32} initialX="3%" initialY="45%" duration={22} delay={1} />
+    <BilliardBall number={4} color="linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)" textColor="white" size={56} initialX="95%" initialY="65%" duration={28} delay={3} />
+    <BilliardBall number={5} color="linear-gradient(135deg, #fb923c 0%, #ea580c 100%)" textColor="black" size={40} initialX="8%" initialY="75%" duration={20} delay={0.5} />
+    <BilliardBall number={6} color="linear-gradient(135deg, #22c55e 0%, #15803d 100%)" textColor="white" size={24} initialX="97%" initialY="35%" duration={18} delay={1.5} />
+    <BilliardBall number={7} color="linear-gradient(135deg, #92400e 0%, #78350f 100%)" textColor="white" size={36} initialX="90%" initialY="80%" duration={24} delay={2.5} />
     
-    {/* Black 8-ball - prominent */}
-    <div className="absolute top-[55%] left-[85%] w-16 h-16 rounded-full bg-gradient-to-br from-gray-800 to-black shadow-2xl opacity-50">
+    {/* Black 8-ball - prominent with special animation */}
+    <div 
+      className="absolute rounded-full shadow-2xl"
+      style={{
+        width: 64,
+        height: 64,
+        left: '85%',
+        top: '55%',
+        background: 'linear-gradient(135deg, #374151 0%, #000000 100%)',
+        animation: 'roll-8 35s linear infinite',
+      }}
+    >
       <div className="absolute inset-2 flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+        <div 
+          className="w-8 h-8 rounded-full bg-white flex items-center justify-center"
+          style={{ animation: 'spin 28s linear infinite' }}
+        >
           <span className="text-black font-bold">8</span>
         </div>
       </div>
@@ -42,7 +85,68 @@ const BilliardBalls = () => (
     
     {/* Cue stick decorations */}
     <div className="absolute bottom-[10%] left-[20%] w-1 h-32 bg-gradient-to-b from-amber-200 to-amber-600 rotate-45 opacity-20 rounded-full" />
-    <div className="absolute bottom-[5%] right-[25%] w-1 h-40 bg-gradient-to-b from-amber-200 to-amber-600 -rotate-30 opacity-15 rounded-full" />
+    <div className="absolute bottom-[5%] right-[25%] w-1 h-40 bg-gradient-to-b from-amber-200 to-amber-600 -rotate-[30deg] opacity-15 rounded-full" />
+    
+    {/* CSS Keyframes for rolling animations */}
+    <style>{`
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      @keyframes roll-1 {
+        0% { transform: translate(0, 0) rotate(0deg); opacity: 0.6; }
+        25% { transform: translate(80px, 120px) rotate(180deg); opacity: 0.5; }
+        50% { transform: translate(40px, 200px) rotate(360deg); opacity: 0.4; }
+        75% { transform: translate(-30px, 100px) rotate(540deg); opacity: 0.5; }
+        100% { transform: translate(0, 0) rotate(720deg); opacity: 0.6; }
+      }
+      @keyframes roll-2 {
+        0% { transform: translate(0, 0) rotate(0deg); opacity: 0.5; }
+        25% { transform: translate(-100px, 80px) rotate(-180deg); opacity: 0.4; }
+        50% { transform: translate(-60px, 160px) rotate(-360deg); opacity: 0.35; }
+        75% { transform: translate(-120px, 60px) rotate(-540deg); opacity: 0.4; }
+        100% { transform: translate(0, 0) rotate(-720deg); opacity: 0.5; }
+      }
+      @keyframes roll-3 {
+        0% { transform: translate(0, 0) rotate(0deg); opacity: 0.4; }
+        33% { transform: translate(60px, -40px) rotate(240deg); opacity: 0.35; }
+        66% { transform: translate(100px, 30px) rotate(480deg); opacity: 0.3; }
+        100% { transform: translate(0, 0) rotate(720deg); opacity: 0.4; }
+      }
+      @keyframes roll-4 {
+        0% { transform: translate(0, 0) rotate(0deg); opacity: 0.3; }
+        25% { transform: translate(-80px, -60px) rotate(-120deg); opacity: 0.25; }
+        50% { transform: translate(-40px, -120px) rotate(-240deg); opacity: 0.2; }
+        75% { transform: translate(-100px, -40px) rotate(-360deg); opacity: 0.25; }
+        100% { transform: translate(0, 0) rotate(-480deg); opacity: 0.3; }
+      }
+      @keyframes roll-5 {
+        0% { transform: translate(0, 0) rotate(0deg); opacity: 0.4; }
+        50% { transform: translate(70px, -80px) rotate(360deg); opacity: 0.35; }
+        100% { transform: translate(0, 0) rotate(720deg); opacity: 0.4; }
+      }
+      @keyframes roll-6 {
+        0% { transform: translate(0, 0) rotate(0deg); opacity: 0.5; }
+        25% { transform: translate(-50px, 60px) rotate(180deg); opacity: 0.45; }
+        50% { transform: translate(-80px, 30px) rotate(360deg); opacity: 0.4; }
+        75% { transform: translate(-30px, 90px) rotate(540deg); opacity: 0.45; }
+        100% { transform: translate(0, 0) rotate(720deg); opacity: 0.5; }
+      }
+      @keyframes roll-7 {
+        0% { transform: translate(0, 0) rotate(0deg); opacity: 0.35; }
+        33% { transform: translate(-60px, -50px) rotate(-240deg); opacity: 0.3; }
+        66% { transform: translate(-90px, 20px) rotate(-480deg); opacity: 0.25; }
+        100% { transform: translate(0, 0) rotate(-720deg); opacity: 0.35; }
+      }
+      @keyframes roll-8 {
+        0% { transform: translate(0, 0) rotate(0deg); opacity: 0.5; }
+        20% { transform: translate(-40px, 30px) rotate(72deg); opacity: 0.45; }
+        40% { transform: translate(-70px, -20px) rotate(144deg); opacity: 0.4; }
+        60% { transform: translate(-30px, -50px) rotate(216deg); opacity: 0.45; }
+        80% { transform: translate(20px, -20px) rotate(288deg); opacity: 0.5; }
+        100% { transform: translate(0, 0) rotate(360deg); opacity: 0.5; }
+      }
+    `}</style>
   </div>
 );
 
