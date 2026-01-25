@@ -1,12 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import SnookerRegistration from "@/components/SnookerRegistration";
 
-const Snooker = () => {
+const SnookerRegister = () => {
   const navigate = useNavigate();
 
   return (
-    <SnookerRegistration onBack={() => navigate("/")} />
+    <SnookerRegistration onBack={() => navigate("/snooker")} />
   );
 };
 
-export default Snooker;
+export default SnookerRegister;
