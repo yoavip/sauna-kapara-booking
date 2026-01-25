@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useUserStore } from "@/stores/userStore";
@@ -15,6 +16,7 @@ interface WelcomeScreenProps {
 }
 
 const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers, onSnooker }: WelcomeScreenProps) => {
+  const navigate = useNavigate();
   const { name, lastName, phone, setUser, clearUser, isRegistered, checkAdminSync, isAdmin } = useUserStore();
   const [inputName, setInputName] = useState(name);
   const [inputLastName, setInputLastName] = useState(lastName);
@@ -106,7 +108,7 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers, onSnooke
           {/* Logo */}
           <div className="flex items-center justify-center gap-3 mb-4">
             <button
-              onClick={() => window.location.href = '/snooker'}
+              onClick={() => navigate('/snooker')}
               className="w-12 h-12 rounded-full bg-golden flex items-center justify-center shadow-glow cursor-pointer hover:scale-110 transition-transform"
             >
               <Flame className="w-6 h-6 text-foreground" />
