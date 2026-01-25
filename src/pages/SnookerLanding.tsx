@@ -93,16 +93,15 @@ const SnookerLanding = () => {
           </Link>
           
           {/* Rules Link */}
-          <Link to="/snooker/rules">
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full h-14 text-lg border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/50 hover:text-emerald-200"
-            >
-              <FileText className="w-5 h-5 ml-2" />
-              תקנון שימוש
-            </Button>
-          </Link>
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full h-14 text-lg border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/50 hover:text-emerald-200"
+            onClick={() => window.open('https://docs.google.com/document/d/10-buDfV_FiHRjLG8Y2FO07W9Qiz2c3Dac41USrrJMOU/edit?usp=drivesdk', '_blank')}
+          >
+            <FileText className="w-5 h-5 ml-2" />
+            תקנון שימוש
+          </Button>
           
           {/* Back to Home */}
           <Link to="/" className="block mt-8">

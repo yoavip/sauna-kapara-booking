@@ -106,7 +106,7 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers, onSnooke
           {/* Logo */}
           <div className="flex items-center justify-center gap-3 mb-4">
             <button
-              onClick={onSnooker}
+              onClick={() => window.location.href = '/snooker'}
               className="w-12 h-12 rounded-full bg-golden flex items-center justify-center shadow-glow cursor-pointer hover:scale-110 transition-transform"
             >
               <Flame className="w-6 h-6 text-foreground" />
