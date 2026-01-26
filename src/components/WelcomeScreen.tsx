@@ -107,12 +107,9 @@ const WelcomeScreen = ({ onRegister, onViewRegistrations, onAdminUsers, onSnooke
         <div className="animate-fade-up max-w-md mx-auto">
           {/* Logo */}
           <div className="flex items-center justify-center gap-3 mb-4">
-            <button
-              onClick={() => navigate('/snooker')}
-              className="w-12 h-12 rounded-full bg-golden flex items-center justify-center shadow-glow cursor-pointer hover:scale-110 transition-transform"
-            >
+            <div className="w-12 h-12 rounded-full bg-golden flex items-center justify-center shadow-glow">
               <Flame className="w-6 h-6 text-foreground" />
-            </button>
+            </div>
           </div>
           
           <h1 className="text-2xl md:text-3xl font-bold text-steam mb-2">

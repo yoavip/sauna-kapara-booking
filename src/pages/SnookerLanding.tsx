@@ -206,13 +206,6 @@ const SnookerLanding = () => {
             <FileText className="w-5 h-5 ml-2" />
             תקנון שימוש
           </Button>
-          
-          {/* Back to Home */}
-          <Link to="/" className="block mt-8">
-            <span className="text-emerald-500/70 hover:text-emerald-400 text-sm transition-colors">
-              חזרה לדף הבית
-            </span>
-          </Link>
         </div>
       </main>
       
