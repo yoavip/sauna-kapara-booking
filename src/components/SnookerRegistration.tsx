@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useUserStore } from "@/stores/userStore";
+import { useSnookerUserStore } from "@/stores/snookerUserStore";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight, Zap, Users, Clock, CalendarDays, ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import { toast } from "sonner";
@@ -90,7 +90,7 @@ const SmokeEffect = () => (
 );
 
 const SnookerRegistration = ({ onBack }: SnookerRegistrationProps) => {
-  const { name, lastName, phone, checkAdminSync, isRegistered: isUserRegistered } = useUserStore();
+  const { name, lastName, phone, isRegistered: isUserRegistered } = useSnookerUserStore();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [hourCounts, setHourCounts] = useState<HourCount[]>([]);
   const [isRegistering, setIsRegistering] = useState<number | null>(null);
@@ -98,7 +98,7 @@ const SnookerRegistration = ({ onBack }: SnookerRegistrationProps) => {
   const [showAddParticipants, setShowAddParticipants] = useState(false);
   const [pendingHour, setPendingHour] = useState<number | null>(null);
   const [displayName, setDisplayName] = useState<string>(name);
-  const isAdminUser = checkAdminSync();
+  const isAdminUser = false; // Admin check not implemented for snooker yet
   
   // State for cancel confirmation dialog
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
