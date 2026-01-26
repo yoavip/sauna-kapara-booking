@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileText, ArrowLeft } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { FileText, ArrowLeft, Check } from "lucide-react";
+import { useSnookerUserStore } from "@/stores/snookerUserStore";
+import SnookerRulesSheet from "@/components/SnookerRulesSheet";
 
 // Billiard ball component with rolling animation
 const BilliardBall = ({ 
@@ -160,6 +164,69 @@ const SmokeEffect = () => (
 );
 
 const SnookerLanding = () => {
+  const { name, phone, isRegistered, setUser, setAgreedToRules, clearUser, agreedToRules } = useSnookerUserStore();
+  
+  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
+  const [inputName, setInputName] = useState(name);
+  const [inputLastName, setInputLastName] = useState('');
+  const [inputPhone, setInputPhone] = useState(phone);
+  const [localAgreedToRules, setLocalAgreedToRules] = useState(agreedToRules);
+  const [showRulesSheet, setShowRulesSheet] = useState(false);
+  
+  const [errors, setErrors] = useState<{name?: string; lastName?: string; phone?: string; rules?: string}>({});
+
+  const validateFields = () => {
+    const newErrors: {name?: string; lastName?: string; phone?: string; rules?: string} = {};
+    
+    if (!inputName.trim()) {
+      newErrors.name = 'לא מילאת שם';
+    }
+    if (!inputLastName.trim()) {
+      newErrors.lastName = 'לא מילאת שם משפחה';
+    }
+    if (!inputPhone.trim()) {
+      newErrors.phone = 'לא מילאת טלפון';
+    }
+    if (!localAgreedToRules) {
+      newErrors.rules = 'לא קראת ואישרת את התקנון';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSaveUser = () => {
+    if (!validateFields()) {
+      return;
+    }
+    
+    setUser(inputName.trim(), inputLastName.trim(), inputPhone.trim());
+    setAgreedToRules(true);
+    setShowRegistrationForm(false);
+  };
+
+  const handleRegisterClick = () => {
+    if (!isRegistered()) {
+      setShowRegistrationForm(true);
+    }
+  };
+
+  const handleRulesConfirm = () => {
+    setLocalAgreedToRules(true);
+    if (errors.rules) setErrors(prev => ({ ...prev, rules: undefined }));
+  };
+
+  const handleNotMe = () => {
+    clearUser();
+    setInputName('');
+    setInputLastName('');
+    setInputPhone('');
+    setLocalAgreedToRules(false);
+    setShowRegistrationForm(false);
+  };
+
+  const registered = isRegistered();
+
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col" style={{ background: 'linear-gradient(180deg, #0c2418 0%, #0a3d24 25%, #0d4a2c 50%, #0a3d24 75%, #0c2418 100%)' }}>
       {/* Felt texture overlay */}
@@ -171,41 +238,155 @@ const SnookerLanding = () => {
       <main className="flex-1 container mx-auto px-4 flex flex-col items-center justify-center relative z-10">
         <div className="text-center max-w-md mx-auto">
           {/* Logo */}
-          <div className="mb-8">
-            <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-gray-800 to-black shadow-2xl flex items-center justify-center mb-6">
-              <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center">
-                <span className="text-black font-bold text-2xl">8</span>
+          <div className="mb-6">
+            <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-gray-800 to-black shadow-2xl flex items-center justify-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center">
+                <span className="text-black font-bold text-xl">8</span>
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-emerald-200 mb-3">
+            <h1 className="text-3xl md:text-4xl font-bold text-emerald-200 mb-2">
               חגיגה בסנוקר
             </h1>
-            <p className="text-emerald-400/80 text-lg">
+            <p className="text-emerald-400/80 text-base">
               שולחן הביליארד | בית קשת
             </p>
           </div>
+
+          {/* Registration Form - for new users */}
+          {showRegistrationForm && (
+            <div className="bg-black/60 backdrop-blur-md rounded-3xl p-6 shadow-2xl mb-6 border border-emerald-700/30">
+              <div className="space-y-4">
+                <div className="mb-4">
+                  <h2 className="text-xl font-bold text-emerald-200 mb-2">
+                    נעים להכיר! 🎱
+                  </h2>
+                  <p className="text-emerald-400/70 text-sm">
+                    בשביל להירשם למשחק, נצטרך ממך כמה פרטים
+                  </p>
+                </div>
+                <div>
+                  <Input
+                    value={inputName}
+                    onChange={(e) => {
+                      setInputName(e.target.value);
+                      if (errors.name) setErrors(prev => ({ ...prev, name: undefined }));
+                    }}
+                    placeholder="שם פרטי"
+                    className={`h-12 text-base text-center bg-black/50 border-emerald-600/50 text-emerald-100 placeholder:text-emerald-600/50 ${errors.name ? 'border-red-500 border-2' : ''}`}
+                  />
+                  {errors.name && <p className="text-red-400 text-sm mt-1">{errors.name}</p>}
+                </div>
+                <div>
+                  <Input
+                    value={inputLastName}
+                    onChange={(e) => {
+                      setInputLastName(e.target.value);
+                      if (errors.lastName) setErrors(prev => ({ ...prev, lastName: undefined }));
+                    }}
+                    placeholder="שם משפחה"
+                    className={`h-12 text-base text-center bg-black/50 border-emerald-600/50 text-emerald-100 placeholder:text-emerald-600/50 ${errors.lastName ? 'border-red-500 border-2' : ''}`}
+                  />
+                  {errors.lastName && <p className="text-red-400 text-sm mt-1">{errors.lastName}</p>}
+                </div>
+                <div>
+                  <Input
+                    value={inputPhone}
+                    onChange={(e) => {
+                      setInputPhone(e.target.value);
+                      if (errors.phone) setErrors(prev => ({ ...prev, phone: undefined }));
+                    }}
+                    placeholder="טלפון"
+                    type="tel"
+                    dir="ltr"
+                    className={`h-12 text-base text-center bg-black/50 border-emerald-600/50 text-emerald-100 placeholder:text-emerald-600/50 ${errors.phone ? 'border-red-500 border-2' : ''}`}
+                  />
+                  {errors.phone && <p className="text-red-400 text-sm mt-1">{errors.phone}</p>}
+                </div>
+                
+                {/* Rules Agreement */}
+                <div className={`${errors.rules ? 'border-2 border-red-500 rounded-lg' : ''}`}>
+                  {!localAgreedToRules ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowRulesSheet(true)}
+                      className="w-full h-12 gap-2 border-emerald-600/50 text-emerald-300 hover:bg-emerald-900/50"
+                    >
+                      <FileText className="w-5 h-5" />
+                      לקריאה ואישור התקנון
+                    </Button>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2 py-3 px-4 bg-emerald-900/50 rounded-lg border border-emerald-600/30">
+                      <Check className="w-5 h-5 text-emerald-400" />
+                      <span className="text-emerald-300 font-medium">התקנון אושר</span>
+                    </div>
+                  )}
+                </div>
+                {errors.rules && <p className="text-red-400 text-sm">{errors.rules}</p>}
+
+                <Button 
+                  onClick={handleSaveUser}
+                  size="lg"
+                  className="w-full h-14 text-lg font-bold bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white"
+                >
+                  שמור והמשך
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* User Info Card - shown when registered */}
+          {registered && !showRegistrationForm && (
+            <div className="bg-black/60 backdrop-blur-md rounded-xl p-4 shadow-xl mb-4 border border-emerald-700/30">
+              <div>
+                <p className="text-emerald-500/70 text-xs">שלום</p>
+                <p className="text-xl font-bold text-emerald-200">{name}</p>
+                <p className="text-emerald-400/70 text-sm mb-1" dir="ltr">{phone}</p>
+                <button
+                  onClick={handleNotMe}
+                  className="text-emerald-500/60 text-xs hover:underline hover:text-emerald-400"
+                >
+                  לא אני? לחצו כאן
+                </button>
+              </div>
+            </div>
+          )}
           
-          {/* Main CTA */}
-          <Link to="/snooker/register">
-            <Button
-              size="lg"
-              className="w-full h-16 text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white shadow-xl mb-4"
-            >
-              הרשמה למשחק
-              <ArrowLeft className="w-6 h-6 mr-2" />
-            </Button>
-          </Link>
-          
-          {/* Rules Link */}
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full h-14 text-lg border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/50 hover:text-emerald-200"
-            onClick={() => window.open('https://docs.google.com/document/d/10-buDfV_FiHRjLG8Y2FO07W9Qiz2c3Dac41USrrJMOU/edit?usp=drivesdk', '_blank')}
-          >
-            <FileText className="w-5 h-5 ml-2" />
-            תקנון שימוש
-          </Button>
+          {/* Action Buttons */}
+          {!showRegistrationForm && (
+            <div className="space-y-3">
+              {registered ? (
+                <Link to="/snooker/register">
+                  <Button
+                    size="lg"
+                    className="w-full h-14 text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white shadow-xl"
+                  >
+                    הרשמה למשחק
+                    <ArrowLeft className="w-6 h-6 mr-2" />
+                  </Button>
+                </Link>
+              ) : (
+                <Button
+                  size="lg"
+                  className="w-full h-14 text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white shadow-xl"
+                  onClick={handleRegisterClick}
+                >
+                  נעים להכיר
+                </Button>
+              )}
+              
+              {/* Rules Link */}
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full h-12 text-base border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/50 hover:text-emerald-200"
+                onClick={() => window.open('https://docs.google.com/document/d/10-buDfV_FiHRjLG8Y2FO07W9Qiz2c3Dac41USrrJMOU/edit?usp=drivesdk', '_blank')}
+              >
+                <FileText className="w-5 h-5 ml-2" />
+                תקנון שימוש
+              </Button>
+            </div>
+          )}
         </div>
       </main>
       
@@ -215,6 +396,12 @@ const SnookerLanding = () => {
           רדיו בר | בית קשת
         </p>
       </footer>
+
+      <SnookerRulesSheet 
+        open={showRulesSheet}
+        onOpenChange={setShowRulesSheet}
+        onConfirm={handleRulesConfirm}
+      />
     </div>
   );
 };
