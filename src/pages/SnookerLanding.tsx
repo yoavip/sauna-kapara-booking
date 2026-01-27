@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FileText, ArrowLeft, Check } from "lucide-react";
+import { FileText, ArrowLeft, Check, Users } from "lucide-react";
 import { useSnookerUserStore } from "@/stores/snookerUserStore";
 import SnookerRulesSheet from "@/components/SnookerRulesSheet";
-
+import SnookerViewRegistrations from "@/components/SnookerViewRegistrations";
 // Billiard ball component with rolling animation
 const BilliardBall = ({ 
   number, 
@@ -167,6 +167,7 @@ const SnookerLanding = () => {
   const { name, phone, isRegistered, setUser, setAgreedToRules, clearUser, agreedToRules } = useSnookerUserStore();
   
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
+  const [showViewRegistrations, setShowViewRegistrations] = useState(false);
   const [inputName, setInputName] = useState(name);
   const [inputLastName, setInputLastName] = useState('');
   const [inputPhone, setInputPhone] = useState(phone);
@@ -226,6 +227,11 @@ const SnookerLanding = () => {
   };
 
   const registered = isRegistered();
+
+  // Show view registrations screen
+  if (showViewRegistrations) {
+    return <SnookerViewRegistrations onBack={() => setShowViewRegistrations(false)} />;
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col" style={{ background: 'linear-gradient(180deg, #0c2418 0%, #0a3d24 25%, #0d4a2c 50%, #0a3d24 75%, #0c2418 100%)' }}>
@@ -356,15 +362,28 @@ const SnookerLanding = () => {
           {!showRegistrationForm && (
             <div className="space-y-3">
               {registered ? (
-                <Link to="/snooker/register">
+                <>
+                  <Link to="/snooker/register">
+                    <Button
+                      size="lg"
+                      className="w-full h-14 text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white shadow-xl"
+                    >
+                      הרשמה למשחק
+                      <ArrowLeft className="w-6 h-6 mr-2" />
+                    </Button>
+                  </Link>
+                  
+                  {/* Who's at the table button */}
                   <Button
+                    variant="outline"
                     size="lg"
-                    className="w-full h-14 text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white shadow-xl"
+                    className="w-full h-12 text-base border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/50 hover:text-emerald-200"
+                    onClick={() => setShowViewRegistrations(true)}
                   >
-                    הרשמה למשחק
-                    <ArrowLeft className="w-6 h-6 mr-2" />
+                    <Users className="w-5 h-5 ml-2" />
+                    מי בשולחן?
                   </Button>
-                </Link>
+                </>
               ) : (
                 <Button
                   size="lg"
