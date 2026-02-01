@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -165,6 +165,10 @@ const SmokeEffect = () => (
 
 const SnookerLanding = () => {
   const { name, phone, isRegistered, setUser, setAgreedToRules, clearUser, agreedToRules } = useSnookerUserStore();
+
+  useEffect(() => {
+    document.title = "ביליארד בית קשת | השולחן הכי חם בצפון 🎱";
+  }, []);
   
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [showViewRegistrations, setShowViewRegistrations] = useState(false);

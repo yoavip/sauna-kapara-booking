@@ -1,8 +1,13 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
 const SnookerRules = () => {
+  useEffect(() => {
+    document.title = "תקנון | ביליארד בית קשת 🎱";
+  }, []);
+
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #0c2418 0%, #0a3d24 25%, #0d4a2c 50%, #0a3d24 75%, #0c2418 100%)' }}>
       {/* Felt texture overlay */}
