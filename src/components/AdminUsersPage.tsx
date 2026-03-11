@@ -382,7 +382,11 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
         <div className="flex flex-wrap gap-3 mb-6">
           <Button variant="outline" onClick={exportRegistrationsCSV} className="flex-1 min-w-[140px]">
             <Download className="w-4 h-4 ml-2" />
-            ייצוא הרשמות
+            ייצוא הרשמות סאונה
+          </Button>
+          <Button variant="outline" onClick={exportSnookerRegistrationsCSV} className="flex-1 min-w-[140px]">
+            <Download className="w-4 h-4 ml-2" />
+            ייצוא הרשמות ביליארד
           </Button>
           <Button variant="outline" onClick={exportUsersStatsCSV} className="flex-1 min-w-[140px]">
             <FileText className="w-4 h-4 ml-2" />
