@@ -140,6 +140,32 @@ const AdminUsersPage = ({ onBack }: AdminUsersPageProps) => {
     toast.success('קובץ הרשמות יוצא בהצלחה');
   };
 
+  const exportSnookerRegistrationsCSV = async () => {
+    const { data, error } = await supabase
+      .from('snooker_registrations')
+      .select('*')
+      .order('registered_at', { ascending: false });
+
+    if (error) {
+      toast.error('שגיאה בייצוא נתוני ביליארד');
+      return;
+    }
+
+    const csvContent = [
+      ['שם', 'טלפון', 'שעה מוזמנת', 'תאריך מוזמן', 'זמן ביצוע הרשמה'].join(','),
+      ...data.map(r => [
+        r.name,
+        r.phone,
+        `${r.hour}:00`,
+        format(new Date(r.registered_at), 'dd/MM/yyyy'),
+        format(new Date(r.created_at), 'dd/MM/yyyy HH:mm')
+      ].join(','))
+    ].join('\n');
+
+    downloadCSV(csvContent, 'snooker_registrations.csv');
+    toast.success('קובץ הרשמות ביליארד יוצא בהצלחה');
+  };
+
   const exportUsersStatsCSV = async () => {
     // Fetch users
     const { data: usersData, error: usersError } = await supabase
