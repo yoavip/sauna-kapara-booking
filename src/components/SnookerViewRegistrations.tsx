@@ -127,10 +127,7 @@ const SnookerViewRegistrations = ({ onBack }: SnookerViewRegistrationsProps) => 
 
   const navigateDate = (direction: 'prev' | 'next') => {
     if (direction === 'prev') {
-      const prevDate = addDays(selectedDate, -1);
-      if (prevDate >= startOfDay(new Date())) {
-        setSelectedDate(prevDate);
-      }
+      setSelectedDate(addDays(selectedDate, -1));
     } else {
       setSelectedDate(addDays(selectedDate, 1));
     }
@@ -183,12 +180,7 @@ const SnookerViewRegistrations = ({ onBack }: SnookerViewRegistrationsProps) => 
             
             <button
               onClick={() => navigateDate('prev')}
-              className={`p-2 rounded-full transition-colors ${
-                isSameDay(selectedDate, new Date()) 
-                  ? 'opacity-30 cursor-not-allowed' 
-                  : 'hover:bg-emerald-900/50 text-emerald-400'
-              }`}
-              disabled={isSameDay(selectedDate, new Date())}
+              className="p-2 rounded-full hover:bg-emerald-900/50 transition-colors text-emerald-400"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
