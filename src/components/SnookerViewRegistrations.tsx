@@ -127,10 +127,7 @@ const SnookerViewRegistrations = ({ onBack }: SnookerViewRegistrationsProps) => 
 
   const navigateDate = (direction: 'prev' | 'next') => {
     if (direction === 'prev') {
-      const prevDate = addDays(selectedDate, -1);
-      if (prevDate >= startOfDay(new Date())) {
-        setSelectedDate(prevDate);
-      }
+      setSelectedDate(addDays(selectedDate, -1));
     } else {
       setSelectedDate(addDays(selectedDate, 1));
     }
