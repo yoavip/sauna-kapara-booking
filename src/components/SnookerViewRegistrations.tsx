@@ -180,12 +180,7 @@ const SnookerViewRegistrations = ({ onBack }: SnookerViewRegistrationsProps) => 
             
             <button
               onClick={() => navigateDate('prev')}
-              className={`p-2 rounded-full transition-colors ${
-                isSameDay(selectedDate, new Date()) 
-                  ? 'opacity-30 cursor-not-allowed' 
-                  : 'hover:bg-emerald-900/50 text-emerald-400'
-              }`}
-              disabled={isSameDay(selectedDate, new Date())}
+              className="p-2 rounded-full hover:bg-emerald-900/50 transition-colors text-emerald-400"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
