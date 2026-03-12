@@ -473,8 +473,13 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
                   
                   <button
                     onClick={() => openAddParticipants(hour)}
-                    className="p-2 rounded-full border border-border hover:border-primary hover:text-primary transition-colors"
-                    title="הוסף משתתפים"
+                    disabled={!isMyRegistration}
+                    className={`p-2 rounded-full border transition-colors ${
+                      isMyRegistration
+                        ? 'border-border hover:border-primary hover:text-primary'
+                        : 'border-border/50 text-muted-foreground/40 cursor-not-allowed'
+                    }`}
+                    title={isMyRegistration ? "הוסף משתתפים" : "יש להירשם קודם"}
                   >
                     <Plus className="w-4 h-4" />
                   </button>
