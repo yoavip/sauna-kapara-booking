@@ -275,6 +275,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
       } else {
         toast.success(`${allIds.length} הרשמות בוטלו`);
         trackCancellation(hour, format(selectedDate, 'yyyy-MM-dd'), name, phone, lastName);
+        await fetchRegistrations();
       }
     } else {
       const { error } = await supabase
@@ -288,6 +289,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
       } else {
         toast.success('ההרשמה בוטלה');
         trackCancellation(hour, format(selectedDate, 'yyyy-MM-dd'), name, phone, lastName);
+        await fetchRegistrations();
       }
     }
   };
