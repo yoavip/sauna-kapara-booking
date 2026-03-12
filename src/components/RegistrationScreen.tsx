@@ -472,18 +472,30 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
                     </PopoverContent>
                   </Popover>
                   
-                  <button
-                    onClick={() => openAddParticipants(hour)}
-                    disabled={!isMyRegistration}
-                    className={`p-2 rounded-full border transition-colors ${
-                      isMyRegistration
-                        ? 'border-border hover:border-primary hover:text-primary'
-                        : 'border-border/50 text-muted-foreground/40 cursor-not-allowed'
-                    }`}
-                    title={isMyRegistration ? "הוסף משתתפים" : "יש להירשם קודם"}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex">
+                          <button
+                            onClick={() => openAddParticipants(hour)}
+                            disabled={!isMyRegistration}
+                            className={`p-2 rounded-full border transition-colors ${
+                              isMyRegistration
+                                ? 'border-border hover:border-primary hover:text-primary'
+                                : 'border-border/50 text-muted-foreground/40 cursor-not-allowed'
+                            }`}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </span>
+                      </TooltipTrigger>
+                      {!isMyRegistration && (
+                        <TooltipContent side="top">
+                          <p>יש להירשם קודם</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
                   
                   {isMyRegistration ? (
                     <Button
