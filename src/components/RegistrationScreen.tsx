@@ -223,6 +223,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
       const count = registrations.length;
       toast.success(`${count > 1 ? `${count} אנשים נרשמו` : 'נרשמת'} בהצלחה לשעה ${hour}:00${dateLabel}!`);
       trackRegistration(hour, format(selectedDate, 'yyyy-MM-dd'), name, phone, lastName, additionalNames.length, additionalNames);
+      await fetchRegistrations();
     }
 
     setIsRegistering(null);
@@ -274,6 +275,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
       } else {
         toast.success(`${allIds.length} הרשמות בוטלו`);
         trackCancellation(hour, format(selectedDate, 'yyyy-MM-dd'), name, phone, lastName);
+        await fetchRegistrations();
       }
     } else {
       const { error } = await supabase
@@ -287,6 +289,7 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
       } else {
         toast.success('ההרשמה בוטלה');
         trackCancellation(hour, format(selectedDate, 'yyyy-MM-dd'), name, phone, lastName);
+        await fetchRegistrations();
       }
     }
   };
