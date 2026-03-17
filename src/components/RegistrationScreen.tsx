@@ -471,9 +471,25 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
                         {count > 0 ? (
                           <>
                             <p className="font-semibold text-sm mb-2">רשומים לשעה {formatHour(hour)}:</p>
-                            {hourDisplayNames.map((n, i) => (
-                              <p key={i} className="text-sm text-muted-foreground">{n}</p>
-                            ))}
+                            {hourParticipants.map((p, i) => {
+                              const isMe = p.phone === phone && hourDisplayNames[i] === displayName;
+                              if (isMe) {
+                                return <p key={i} className="text-sm text-primary font-medium">{p.displayName}</p>;
+                              }
+                              const phoneNumber = p.phone.startsWith('0') ? '972' + p.phone.slice(1) : p.phone;
+                              const message = `שלום, ראיתי שנרשמתם לסאונה בשעה ${formatHour(hour)}. האם אפשר להצטרף?`;
+                              return (
+                                <a
+                                  key={i}
+                                  href={`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block text-sm text-muted-foreground hover:text-foreground underline decoration-dotted underline-offset-2 transition-colors"
+                                >
+                                  {p.displayName} 💬
+                                </a>
+                              );
+                            })}
                           </>
                         ) : (
                           <p className="text-sm text-muted-foreground">אין כאן אף אחד בינתיים</p>
