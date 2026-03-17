@@ -238,14 +238,22 @@ const SnookerViewRegistrations = ({ onBack }: SnookerViewRegistrationsProps) => 
                         const isMyRegistration = reg.name === name && reg.phone === phone;
                         const canCancel = canCancelRegistration(reg);
                         
-                        return (
+                          const handleNameClick = () => {
+                            if (isMyRegistration) return;
+                            const message = `שלום, ראיתי שנרשמתם לסנוקר בשעה ${formatHour(hour)}. האם אפשר להצטרף?`;
+                            const phoneNumber = reg.phone.startsWith('0') ? '972' + reg.phone.slice(1) : reg.phone;
+                            window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, '_blank');
+                          };
+
+                          return (
                           <div
                             key={reg.id}
                             className={`flex items-center gap-2 px-4 py-2 rounded-full border ${
                               isMyRegistration 
                                 ? 'bg-emerald-600/20 border-emerald-500' 
-                                : 'bg-black/40 border-emerald-700/30'
+                                : 'bg-black/40 border-emerald-700/30 cursor-pointer hover:bg-emerald-900/30 active:scale-95 transition-all'
                             }`}
+                            onClick={handleNameClick}
                           >
                             <User className={`w-4 h-4 ${isMyRegistration ? 'text-emerald-400' : 'text-emerald-500/70'}`} />
                             <span className={`font-medium ${isMyRegistration ? 'text-emerald-300' : 'text-emerald-200'}`}>
