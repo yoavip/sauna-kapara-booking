@@ -280,14 +280,22 @@ const ViewRegistrations = ({ onBack }: ViewRegistrationsProps) => {
                         const isMyRegistration = reg.name === name && reg.phone === phone;
                         const canCancel = canCancelRegistration(reg);
                         
+                        const handleNameClick = () => {
+                          if (isMyRegistration) return;
+                          const message = `שלום, ראיתי שנרשמתם לסאונה בשעה ${formatHour(hour)}. האם אפשר להצטרף?`;
+                          const phoneNumber = reg.phone.startsWith('0') ? '972' + reg.phone.slice(1) : reg.phone;
+                          window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, '_blank');
+                        };
+
                         return (
                           <div
                             key={reg.id}
                             className={`flex items-center gap-2 px-4 py-2 rounded-full border ${
                               isMyRegistration 
                                 ? 'bg-primary/10 border-primary' 
-                                : 'bg-background border-border'
+                                : 'bg-background border-border cursor-pointer hover:bg-muted/50 active:scale-95 transition-all'
                             }`}
+                            onClick={handleNameClick}
                           >
                             <User className={`w-4 h-4 ${isMyRegistration ? 'text-primary' : 'text-muted-foreground'}`} />
                             <span className={`font-medium ${isMyRegistration ? 'text-primary' : 'text-foreground'}`}>
