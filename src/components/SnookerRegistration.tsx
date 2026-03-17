@@ -29,6 +29,7 @@ interface HourCount {
   hour: number;
   count: number;
   displayNames: string[];
+  participants: { displayName: string; phone: string }[];
 }
 
 interface MyRegistration {
@@ -175,7 +176,11 @@ const SnookerRegistration = ({ onBack }: SnookerRegistrationProps) => {
       const displayNames = regs.map(r => 
         phoneNameToDisplayName.get(`${r.phone}|${r.name}`) || r.name
       );
-      return { hour: h, count: counts[h] || 0, displayNames };
+      const participants = regs.map(r => ({
+        displayName: phoneNameToDisplayName.get(`${r.phone}|${r.name}`) || r.name,
+        phone: r.phone,
+      }));
+      return { hour: h, count: counts[h] || 0, displayNames, participants };
     });
 
     setHourCounts(resolvedHourCounts);
@@ -498,7 +503,7 @@ const SnookerRegistration = ({ onBack }: SnookerRegistrationProps) => {
             {isToday ? 'שעות היום' : `שעות ${getDateLabel(selectedDate)}`}
           </h2>
           
-          {hourCounts.map(({ hour, count, displayNames: hourDisplayNames }) => {
+          {hourCounts.map(({ hour, count, displayNames: hourDisplayNames, participants: hourParticipants }) => {
             const isMyRegistration = isRegisteredForHour(hour);
             const isCurrentHour = isToday && hour === currentHour;
             
@@ -537,9 +542,28 @@ const SnookerRegistration = ({ onBack }: SnookerRegistrationProps) => {
                         {count > 0 ? (
                           <>
                             <p className="font-semibold text-sm mb-2 text-emerald-200">רשומים לשעה {formatHour(hour)}:</p>
-                            {hourDisplayNames.map((n, i) => (
-                              <p key={i} className="text-sm text-emerald-400">{n}</p>
-                            ))}
+                            {hourParticipants.map((p, i) => {
+                              const isMe = p.phone === phone;
+                              if (isMe) {
+                                return <p key={i} className="text-sm text-emerald-400">{p.displayName}</p>;
+                              }
+                              const formattedPhone = p.phone.startsWith('0') 
+                                ? '972' + p.phone.slice(1) 
+                                : p.phone;
+                              const message = encodeURIComponent(`שלום, ראיתי שנרשמתם לסנוקר בשעה ${formatHour(hour)}. האם אפשר להצטרף?`);
+                              const waUrl = `https://wa.me/${formattedPhone}?text=${message}`;
+                              return (
+                                <a 
+                                  key={i} 
+                                  href={waUrl} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="block text-sm text-emerald-400 hover:text-emerald-200 cursor-pointer underline decoration-emerald-600 hover:decoration-emerald-400 transition-colors"
+                                >
+                                  {p.displayName} 💬
+                                </a>
+                              );
+                            })}
                           </>
                         ) : (
                           <p className="text-sm text-emerald-500">אין כאן אף אחד בינתיים</p>
