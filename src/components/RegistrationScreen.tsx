@@ -28,10 +28,16 @@ interface RegistrationScreenProps {
   onBack: () => void;
 }
 
+interface HourParticipant {
+  displayName: string;
+  phone: string;
+}
+
 interface HourCount {
   hour: number;
   count: number;
   displayNames: string[];
+  participants: HourParticipant[];
 }
 
 interface MyRegistration {
