@@ -503,7 +503,7 @@ const SnookerRegistration = ({ onBack }: SnookerRegistrationProps) => {
             {isToday ? 'שעות היום' : `שעות ${getDateLabel(selectedDate)}`}
           </h2>
           
-          {hourCounts.map(({ hour, count, displayNames: hourDisplayNames }) => {
+          {hourCounts.map(({ hour, count, displayNames: hourDisplayNames, participants: hourParticipants }) => {
             const isMyRegistration = isRegisteredForHour(hour);
             const isCurrentHour = isToday && hour === currentHour;
             
