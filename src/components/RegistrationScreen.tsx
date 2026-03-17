@@ -140,7 +140,11 @@ const RegistrationScreen = ({ onBack }: RegistrationScreenProps) => {
       const displayNames = regs.map(r => 
         phoneNameToDisplayName.get(`${r.phone}|${r.name}`) || r.name
       );
-      return { hour: h, count: counts[h] || 0, displayNames };
+      const participants = regs.map(r => ({
+        displayName: phoneNameToDisplayName.get(`${r.phone}|${r.name}`) || r.name,
+        phone: r.phone,
+      }));
+      return { hour: h, count: counts[h] || 0, displayNames, participants };
     });
 
     setHourCounts(resolvedHourCounts);
