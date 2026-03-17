@@ -29,6 +29,7 @@ interface HourCount {
   hour: number;
   count: number;
   displayNames: string[];
+  participants: { displayName: string; phone: string }[];
 }
 
 interface MyRegistration {
