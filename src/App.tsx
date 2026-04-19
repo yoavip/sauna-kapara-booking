@@ -10,6 +10,8 @@ import ReportBugButton from "./components/ReportBugButton";
 import SnookerLanding from "./pages/SnookerLanding";
 import SnookerRules from "./pages/SnookerRules";
 import SnookerRegister from "./pages/SnookerRegister";
+import EffiBooking from "./pages/EffiBooking";
+import EffiAdmin from "./pages/EffiAdmin";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +28,8 @@ const App = () => (
           <Route path="/snooker/rules" element={<SnookerRules />} />
           <Route path="/snooker/register" element={<SnookerRegister />} />
           <Route path="/tour-guide" element={<TourGuide />} />
+          <Route path="/effi" element={<EffiBooking />} />
+          <Route path="/effi/admin" element={<EffiAdmin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
