@@ -41,6 +41,42 @@ export type Database = {
         }
         Relationships: []
       }
+      effi_bookings: {
+        Row: {
+          check_in: string
+          check_out: string
+          created_at: string
+          full_name: string
+          guests_count: number
+          id: string
+          notes: string | null
+          phone: string
+          rules_accepted: boolean
+        }
+        Insert: {
+          check_in: string
+          check_out: string
+          created_at?: string
+          full_name: string
+          guests_count?: number
+          id?: string
+          notes?: string | null
+          phone: string
+          rules_accepted?: boolean
+        }
+        Update: {
+          check_in?: string
+          check_out?: string
+          created_at?: string
+          full_name?: string
+          guests_count?: number
+          id?: string
+          notes?: string | null
+          phone?: string
+          rules_accepted?: boolean
+        }
+        Relationships: []
+      }
       registrations: {
         Row: {
           created_at: string
