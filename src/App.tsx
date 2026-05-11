@@ -10,6 +10,7 @@ import ReportBugButton from "./components/ReportBugButton";
 import SnookerLanding from "./pages/SnookerLanding";
 import SnookerRules from "./pages/SnookerRules";
 import SnookerRegister from "./pages/SnookerRegister";
+import SnookerStats from "./pages/SnookerStats";
 import EffiBooking from "./pages/EffiBooking";
 import EffiAdmin from "./pages/EffiAdmin";
 
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/snooker" element={<SnookerLanding />} />
           <Route path="/snooker/rules" element={<SnookerRules />} />
           <Route path="/snooker/register" element={<SnookerRegister />} />
+          <Route path="/snooker/stats" element={<SnookerStats />} />
           <Route path="/tour-guide" element={<TourGuide />} />
           <Route path="/effi" element={<EffiBooking />} />
           <Route path="/effi/admin" element={<EffiAdmin />} />
