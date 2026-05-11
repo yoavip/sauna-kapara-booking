@@ -261,7 +261,10 @@ const SnookerViewRegistrations = ({ onBack }: SnookerViewRegistrationsProps) => 
                             </span>
                             {canCancel && !isPastDate && (
                               <button
-                                onClick={() => handleCancelRegistration(reg.id, reg.name)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCancelRegistration(reg.id, reg.name);
+                                }}
                                 className="p-1 hover:bg-red-500/20 rounded-full transition-colors mr-1"
                                 title="ביטול הרשמה"
                               >
