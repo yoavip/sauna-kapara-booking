@@ -3,7 +3,7 @@ name: Deploy Vite site to GitHub Pages
 
 on:
   push:
-    branches: [ "main" ]   # deploy when you push to main
+    branches: [ "NoBranch" ]   # deploy when you push to main
   workflow_dispatch:       # allow manual trigger
 
 permissions:
