@@ -7,8 +7,15 @@ import SnookerRegistration from "@/components/SnookerRegistration";
 
 type Screen = 'welcome' | 'register' | 'view' | 'admin-users' | 'snooker';
 
+const SAUNA_HOMEPAGE_REDIRECT = "https://yoavip.github.io/sauna-kapara-booking/";
+
 const Index = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('welcome');
+
+  // Redirect sauna homepage to the new GitHub Pages site
+  useEffect(() => {
+    window.location.replace(SAUNA_HOMEPAGE_REDIRECT);
+  }, []);
 
   // Handle browser back button
   useEffect(() => {
