@@ -1,5 +1,7 @@
 # Welcome to your Lovable project
 
+A combined booking app for sauna, snooker, tour guide, and short-term rental flows.
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
