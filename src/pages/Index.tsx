@@ -10,13 +10,14 @@ type Screen = 'welcome' | 'register' | 'view' | 'admin-users' | 'snooker';
 const Index = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('welcome');
 
+  // Helper to read screen from hash
+  const getScreenFromHash = (): Screen => {
+    const hash = window.location.hash.replace('#', '') as Screen;
+    return hash || 'welcome';
+  };
+
   // Initialize from hash and listen for changes
   useEffect(() => {
-    const getScreenFromHash = (): Screen => {
-      const hash = window.location.hash.replace('#', '') as Screen;
-      return hash || 'welcome';
-    };
-
     setCurrentScreen(getScreenFromHash());
 
     const handleHashChange = () => {
