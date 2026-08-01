@@ -10,28 +10,29 @@ type Screen = 'welcome' | 'register' | 'view' | 'admin-users' | 'snooker';
 const Index = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('welcome');
 
-  // Handle browser back button
+  // Initialize from hash and listen for changes
   useEffect(() => {
-    const handlePopState = () => {
-      setCurrentScreen('welcome');
+    const getScreenFromHash = (): Screen => {
+      const hash = window.location.hash.replace('#', '') as Screen;
+      return hash || 'welcome';
     };
 
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    setCurrentScreen(getScreenFromHash());
+
+    const handleHashChange = () => {
+      setCurrentScreen(getScreenFromHash());
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   const navigateTo = (screen: Screen) => {
-    if (screen !== 'welcome') {
-      window.history.pushState({ screen }, '', `#${screen}`);
-    }
-    setCurrentScreen(screen);
+    window.location.hash = screen;   // always use hash navigation
   };
 
   const navigateBack = () => {
-    if (window.history.state?.screen) {
-      window.history.back();
-    }
-    setCurrentScreen('welcome');
+    window.location.hash = 'welcome';
   };
 
   return (
@@ -45,24 +46,16 @@ const Index = () => {
         />
       )}
       {currentScreen === 'register' && (
-        <RegistrationScreen 
-          onBack={navigateBack}
-        />
+        <RegistrationScreen onBack={navigateBack} />
       )}
       {currentScreen === 'view' && (
-        <ViewRegistrations 
-          onBack={navigateBack}
-        />
+        <ViewRegistrations onBack={navigateBack} />
       )}
       {currentScreen === 'admin-users' && (
-        <AdminUsersPage 
-          onBack={navigateBack}
-        />
+        <AdminUsersPage onBack={navigateBack} />
       )}
       {currentScreen === 'snooker' && (
-        <SnookerRegistration 
-          onBack={navigateBack}
-        />
+        <SnookerRegistration onBack={navigateBack} />
       )}
     </div>
   );
