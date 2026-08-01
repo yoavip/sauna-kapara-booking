@@ -22,7 +22,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <ReportBugButton />
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/snooker" element={<SnookerLanding />} />
